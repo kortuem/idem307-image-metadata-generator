@@ -42,27 +42,22 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Session storage helper functions (filesystem-based for Vercel compatibility)
-SESSION_FOLDER = Path('/tmp') / 'sessions'
-SESSION_FOLDER.mkdir(parents=True, exist_ok=True)
+# Session storage - hybrid approach
+# On Vercel: use in-memory (since /tmp doesn't persist across function calls)
+# Local dev: also use in-memory for consistency
+_sessions = {}
 
 def save_session(session_id, data):
-    """Save session data to filesystem."""
-    session_file = SESSION_FOLDER / f"{session_id}.json"
-    with open(session_file, 'w') as f:
-        json.dump(data, f)
+    """Save session data to memory."""
+    _sessions[session_id] = data
 
 def load_session(session_id):
-    """Load session data from filesystem."""
-    session_file = SESSION_FOLDER / f"{session_id}.json"
-    if not session_file.exists():
-        return None
-    with open(session_file, 'r') as f:
-        return json.load(f)
+    """Load session data from memory."""
+    return _sessions.get(session_id)
 
 def session_exists(session_id):
     """Check if session exists."""
-    return (SESSION_FOLDER / f"{session_id}.json").exists()
+    return session_id in _sessions
 
 
 @app.route('/')
