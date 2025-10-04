@@ -17,12 +17,24 @@ This web application automates the time-consuming task of writing captions for i
 - 📦 **Replicate Export**: One-click export to Replicate-compatible zip format
 - 🎨 **Clean UI**: Modern, responsive interface with keyboard shortcuts
 
+## Example Datasets
+
+Practice with these example image datasets from TU Delft campus spaces:
+
+- [IDE Drawing Studio](https://www.dropbox.com/scl/fi/a0a4qglv2xfd16hzdulnp/IDE-Drawing-Studio.zip?rlkey=uaoo41ldb8nnbgul8yn9er7m3&dl=0) (24 images)
+- [IDE Lecture Hall](https://www.dropbox.com/scl/fi/c7r4pq0hct6539s3e8pe4/IDE-Lecture-Hall.zip?rlkey=ht5u3zvn7oo30svm2ps9gglrl&dl=0) (39 images)
+- [IDE Main Hall](https://www.dropbox.com/scl/fi/hq8pvb85977d675yynrjf/IDE-Main-Hall.zip?rlkey=oi2zhq6ot0htq5ftogmllkn9w&dl=0) (39 images)
+- [IDE Studio](https://www.dropbox.com/scl/fi/vgykhjs3o8okbd637vltr/IDE-Studio.zip?rlkey=x0sru5uw2ubi886vs2z2q6lp8&dl=0) (47 images)
+- [SDE Hallway](https://www.dropbox.com/scl/fi/ihxy8f0bi7o3z87yr79ez/SDE-Hallway.zip?rlkey=3gzeys2z38autw3vyax2dutg2&dl=0) (38 images)
+
+Download, extract, and use these to test the tool!
+
 ## Quick Start
 
 ### Prerequisites
 
 - Python 3.9+
-- Google Gemini API key ([Get one here](https://ai.google.dev/))
+- Google Gemini API key ([Get one here](https://aistudio.google.com/))
 
 ### Installation
 

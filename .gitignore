@@ -50,9 +50,9 @@ Thumbs.db
 static/uploads/*
 !static/uploads/.gitkeep
 
-# Exclude generated zip files except example dataset
+# Exclude images and zip files (example datasets hosted on Dropbox)
+images/
 *.zip
-!images/**/*.zip
 
 # Logs
 *.log

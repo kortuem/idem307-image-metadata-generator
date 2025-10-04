@@ -19,6 +19,23 @@ The tool uses Google's advanced **Gemini 2.5 Pro AI model** to analyze your imag
 
 ---
 
+## Example Datasets
+
+Want to try it out first? Download these example image datasets from TU Delft campus spaces:
+
+- [IDE Drawing Studio](https://www.dropbox.com/scl/fi/a0a4qglv2xfd16hzdulnp/IDE-Drawing-Studio.zip?rlkey=uaoo41ldb8nnbgul8yn9er7m3&dl=0) (24 images)
+- [IDE Lecture Hall](https://www.dropbox.com/scl/fi/c7r4pq0hct6539s3e8pe4/IDE-Lecture-Hall.zip?rlkey=ht5u3zvn7oo30svm2ps9gglrl&dl=0) (39 images)
+- [IDE Main Hall](https://www.dropbox.com/scl/fi/hq8pvb85977d675yynrjf/IDE-Main-Hall.zip?rlkey=oi2zhq6ot0htq5ftogmllkn9w&dl=0) (39 images)
+- [IDE Studio](https://www.dropbox.com/scl/fi/vgykhjs3o8okbd637vltr/IDE-Studio.zip?rlkey=x0sru5uw2ubi886vs2z2q6lp8&dl=0) (47 images)
+- [SDE Hallway](https://www.dropbox.com/scl/fi/ihxy8f0bi7o3z87yr79ez/SDE-Hallway.zip?rlkey=3gzeys2z38autw3vyax2dutg2&dl=0) (38 images)
+
+**How to use:**
+1. Click any link above to download a ZIP file
+2. Extract the images to a folder on your computer
+3. Follow the tutorial below to process them!
+
+---
+
 ## How It Works (Simple Overview)
 
 1. **Upload your images** → The tool stores them temporarily
