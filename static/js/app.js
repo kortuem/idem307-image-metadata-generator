@@ -296,7 +296,8 @@ async function generateCaptions() {
         try {
             const requestBody = {
                 session_id: state.sessionId,
-                filename: filename
+                filename: filename,
+                trigger_word: state.triggerWord
             };
 
             // Include API key if user provided one

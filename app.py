@@ -303,6 +303,7 @@ def generate_single_caption():
         data = request.get_json()
         session_id = data.get('session_id')
         filename = data.get('filename')
+        trigger_word = data.get('trigger_word', '').strip()
 
         session_data = load_session(session_id)
         if not session_data:
@@ -317,8 +318,15 @@ def generate_single_caption():
                 'error': 'Image not found in session'
             }), 404
 
+        # Update trigger word in session if provided
+        if trigger_word and not session_data['trigger_word']:
+            session_data['trigger_word'] = trigger_word
+            save_session(session_id, session_data)
+        elif not trigger_word:
+            # Fall back to session trigger word if not provided
+            trigger_word = session_data['trigger_word']
+
         img_data = session_data['images'][filename]
-        trigger_word = session_data['trigger_word']
 
         # Get API key or access code from request (REQUIRED)
         user_input = data.get('api_key', '').strip()
