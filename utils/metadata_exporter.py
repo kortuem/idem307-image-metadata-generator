@@ -111,18 +111,27 @@ def create_training_zip(
 
         # Create zip file
         with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            # Add all images
+            # Add all images with individual caption .txt files
             for filename in captions.keys():
                 image_path = os.path.join(image_folder, filename)
                 if os.path.exists(image_path):
+                    # Add image
                     zipf.write(image_path, arcname=filename)
                     logger.debug(f"Added to zip: {filename}")
+
+                    # Add matching .txt file with caption
+                    # Get base filename without extension
+                    base_name = os.path.splitext(filename)[0]
+                    txt_filename = f"{base_name}.txt"
+
+                    # Get caption for this image
+                    caption = captions.get(filename, '')
+
+                    # Add .txt file with caption
+                    zipf.writestr(txt_filename, caption.encode('utf-8'))
+                    logger.debug(f"Added caption file: {txt_filename}")
                 else:
                     logger.warning(f"Image not found, skipping: {filename}")
-
-            # Add metadata.txt
-            zipf.writestr('metadata.txt', metadata_content.encode('utf-8'))
-            logger.debug("Added metadata.txt to zip")
 
         # Get zip file size
         zip_size = os.path.getsize(output_path)
@@ -169,17 +178,26 @@ def create_training_zip_in_memory(
         # Create zip in memory
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            # Add all images
+            # Add all images with individual caption .txt files
             for filename, image_path in image_paths.items():
                 if os.path.exists(image_path):
+                    # Add image
                     zipf.write(image_path, arcname=filename)
                     logger.debug(f"Added to zip: {filename}")
+
+                    # Add matching .txt file with caption
+                    # Get base filename without extension
+                    base_name = os.path.splitext(filename)[0]
+                    txt_filename = f"{base_name}.txt"
+
+                    # Get caption for this image
+                    caption = captions.get(filename, '')
+
+                    # Add .txt file with caption
+                    zipf.writestr(txt_filename, caption.encode('utf-8'))
+                    logger.debug(f"Added caption file: {txt_filename}")
                 else:
                     logger.warning(f"Image not found, skipping: {filename}")
-
-            # Add metadata.txt
-            zipf.writestr('metadata.txt', metadata_content.encode('utf-8'))
-            logger.debug("Added metadata.txt to zip")
 
         # Get zip size
         zip_size = zip_buffer.tell()

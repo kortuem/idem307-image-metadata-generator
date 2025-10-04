@@ -37,18 +37,25 @@ cd image-metadata-generator
 pip install -r requirements.txt
 ```
 
-3. **Configure environment**
+3. **Get a Gemini API Key**
+   - Go to [Google AI Studio](https://aistudio.google.com/)
+   - Sign in with your Google account
+   - Click "Get API Key" → "Create API Key"
+   - Copy your API key
+
+4. **Configure environment** (optional - for shared deployments only)
 ```bash
 cp .env.example .env
 # Edit .env and add your GEMINI_API_KEY
+# Optionally add SECRET_ACCESS_CODE if you want to share access with others
 ```
 
-4. **Run the application**
+5. **Run the application**
 ```bash
 python app.py
 ```
 
-5. **Open in browser**
+6. **Open in browser**
 ```
 http://localhost:5000
 ```
@@ -65,17 +72,21 @@ http://localhost:5000
    - Type your trigger word (e.g., `ide_main_hall`, `ide_person`)
    - Must be lowercase, underscores only, no spaces
 
-3. **Generate Captions**
+3. **Enter API Key**
+   - Enter your Gemini API key (from [Google AI Studio](https://aistudio.google.com/))
+   - Or use provided access code (if deployer shared one with you)
+
+4. **Generate Captions**
    - Click "Generate Captions"
    - Wait 2-3 minutes for batch processing (~2s per image)
 
-4. **Review & Edit**
+5. **Review & Edit**
    - Click thumbnails to navigate images
    - Edit captions in the textarea
    - Changes auto-save
    - Use arrow keys for quick navigation
 
-5. **Export**
+6. **Export**
    - Click "Preview metadata.txt" to review final output
    - Click "Export Training Zip" to download
    - Upload zip file to Replicate
@@ -108,16 +119,27 @@ Create a `.env` file (copy from `.env.example`):
 # Required
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# Optional
+# Optional: Secret access code (for shared deployments)
+# If set, users can enter this code instead of their own API key
+# Choose your own unique code (e.g., "myclass2024")
+SECRET_ACCESS_CODE=your_chosen_secret_code
+
+# Optional: Flask settings
 FLASK_ENV=development
 FLASK_DEBUG=True
 MAX_FILE_SIZE_MB=10
 MAX_TOTAL_UPLOAD_MB=100
 ```
 
+**Getting a Gemini API Key:**
+1. Visit [Google AI Studio](https://aistudio.google.com/)
+2. Sign in with Google account
+3. Click "Get API Key" → "Create API Key"
+4. Copy and paste into `.env` file
+
 ### Gemini API
 
-- **Model used**: `gemini-2.5-flash-latest` (with fallbacks to 2.5-flash → 2.0-flash-exp → 1.5-flash)
+- **Model used**: `gemini-2.5-pro` (with fallbacks to 2.5-flash → 2.0-flash-exp → 1.5-pro → 1.5-flash)
 - **Free tier limits**: 15 requests/minute, 1500/day
 - **Rate limiting**: 2-second delay between requests (built-in)
 - **Cost**: Free tier covers ~180 images easily
@@ -193,7 +215,8 @@ git push origin main
 
 3. **Configure Environment Variables**
    - In Vercel project settings → Environment Variables
-   - Add: `GEMINI_API_KEY` = your_key
+   - Add: `GEMINI_API_KEY` = your_gemini_api_key (from [Google AI Studio](https://aistudio.google.com/))
+   - Add: `SECRET_ACCESS_CODE` = your_chosen_secret_code (optional - for sharing with students/users)
 
 4. **Deploy**
    - Vercel auto-deploys on every push to main
@@ -261,14 +284,17 @@ git push origin main
 
 MIT License - Use freely for educational and personal projects.
 
-## Acknowledgments
+## Credits
 
-- Built for IDEM307 workshop at TU Delft
-- Uses Google Gemini for vision AI
-- Designed for Replicate.com LoRA training
+Developed by **Prof. Gerd Kortuem** with **Claude Code**
+TU Delft, Faculty of Industrial Design Engineering
+Contact: [g.w.kortuem@tudelft.nl](mailto:g.w.kortuem@tudelft.nl)
+
+**Built for**: IDEM307 Generative AI and Design - TU Delft
+**Powered by**: Google Gemini 2.5 Pro API
+**Designed for**: Replicate.com FLUX LoRA fine-tuning
 
 ---
 
-**Version**: 1.0.0
-**Last Updated**: 2025-10-04
-**Author**: Image Metadata Generator Team
+**Version**: 2.0.0
+**Last Updated**: October 2025

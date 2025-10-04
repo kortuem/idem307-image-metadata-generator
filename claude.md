@@ -1,8 +1,17 @@
 # Claude Project Instructions
 
+**STATUS**: ✅ PRODUCTION - Deployed for TU Delft IDEM307 Workshop
+
 ## Project Overview
 
-Metadata generation tool for preparing image datasets for LoRA fine-tuning on Replicate.com. User (university professor) needs to process 6 datasets (5 campus spaces + 1 person) for an AI workshop.
+Web application for generating AI-powered image captions for LoRA fine-tuning datasets. Built for TU Delft IDEM307 workshop students. Publicly deployed with secret access code authentication for shared Gemini API key usage.
+
+**Key Features**:
+- Gemini 2.5 Pro AI caption generation
+- Real-time progress tracking
+- Per-image caption editing
+- Replicate.com-compatible ZIP export (individual .txt files per image)
+- Secret access code system for controlled API key sharing
 
 ## Development Principles
 
@@ -39,11 +48,13 @@ Ask user which they prefer if unclear from context.
 
 ### API Usage (Gemini)
 
-- API key: `GEMINI_API_KEY` environment variable
-- Model: `gemini-2.0-flash-exp` or latest
+- API key: `GEMINI_API_KEY` environment variable (or user-provided via UI)
+- Secret access code: `SECRET_ACCESS_CODE` environment variable
+- Model: `gemini-2.5-pro` (priority), fallback chain: 2.5-flash → 2.0-flash-exp → 1.5-pro → 1.5-flash
 - Free tier: ~15 req/min, 1500/day
-- Strategy: 2s delay between requests
+- Strategy: 2s delay between requests (per-image sequential processing)
 - Retry: exponential backoff (1s, 2s, 4s, 8s)
+- Performance: ~18 seconds per image with Gemini 2.5 Pro
 
 ### Caption Format (CRITICAL)
 

@@ -16,25 +16,42 @@ logger = logging.getLogger(__name__)
 class GeminiCaptionGenerator:
     """Generates image captions using Google Gemini vision API."""
 
-    # Vision prompt template for structured caption generation
-    VISION_PROMPT = """Analyze this interior space/person image and provide a structured description following this format:
+    # Vision prompt template optimized for LoRA training dataset generation
+    # Based on best practices for text-to-image model fine-tuning metadata
+    VISION_PROMPT = """You are an expert image annotator for a leading text-to-image AI model. Your task is to analyze the provided image and generate a single, highly descriptive prompt that can be used to faithfully reproduce this image.
 
-For spaces: [room_type], [key_objects_visible], [lighting_description], [contextual_details]
-For person: [pose/action], [clothing], [expression], [lighting], [background]
+The prompt must be a single, continuous sentence and should be structured using the following mandatory elements:
 
-Be specific and objective. Focus on:
-- Architectural/spatial elements (for spaces)
-- Physical appearance and pose (for person)
-- Lighting conditions (natural vs artificial, quality, direction)
-- Atmosphere and context
-- Visible objects and furniture
-- Materials and textures where relevant
+**Subject**: The main object(s), space, or person(s) in the image.
 
-Example output for space: "lecture hall, tiered seating, projection screen, overhead fluorescent lighting, teaching space with rows of desks"
+**Environment/Location**: The setting (e.g., in a modern office, a minimalist lecture hall, an industrial workspace).
 
-Example output for person: "standing, casual jeans and sweater, relaxed expression, soft window light from left, neutral grey background"
+**Style & Composition**: Specify photographic style (e.g., photorealistic, architectural photography, wide-angle shot, 50mm lens, natural light, golden hour, high-key lighting).
 
-Do NOT include the "photo of [trigger_word]" prefix - that will be added automatically."""
+**Key Details**: Materials, colors, textures, and critical elements (e.g., polished concrete floor, exposed brick walls, ergonomic mesh chairs, floor-to-ceiling windows, soft diffused lighting from skylights).
+
+**Spatial Relationships**: How elements relate to each other (e.g., rows of desks facing a projection screen, spiral staircase connecting two floors, open-plan layout with glass partitions).
+
+**Mood/Atmosphere**: The overall feeling (e.g., minimalist and serene, busy and collaborative, moody and intimate, bright and energetic).
+
+**For Person Images, Focus On**:
+- Pose/action, clothing style, expression
+- Lighting quality and direction
+- Background environment and depth
+- Physical appearance and context
+
+**Example outputs**:
+
+Space: "A spacious industrial-style design studio with exposed concrete ceiling beams and polished concrete floors, featuring rows of black drafting tables with adjustable LED task lamps, floor-to-ceiling windows providing soft natural daylight, surrounded by white acoustic wall panels and cork pinboards displaying sketches, creating a minimalist yet creative atmosphere with high ceilings and open-plan layout"
+
+Person: "A confident professional standing in relaxed pose wearing casual dark jeans and charcoal crew-neck sweater, calm and approachable expression, illuminated by soft window light from camera left creating subtle shadow definition, against a neutral medium-grey seamless backdrop with shallow depth of field"
+
+**Critical Instructions**:
+- Output ONLY the complete, single-sentence descriptive prompt
+- Do NOT include any introductory text, explanations, or the word "photo" or "image"
+- Do NOT include the trigger word prefix - that will be added automatically
+- Be extremely specific about materials, lighting, spatial layout, and atmosphere
+- Use professional photographic and architectural terminology where appropriate"""
 
     def __init__(self, api_key: Optional[str] = None, trigger_word: str = ""):
         """
@@ -55,12 +72,19 @@ Do NOT include the "photo of [trigger_word]" prefix - that will be added automat
         # Configure Gemini API
         genai.configure(api_key=self.api_key)
 
-        # Try newest model first, fallback chain to older stable versions
+        # Model names for google-generativeai 0.8.x (latest API)
+        # Prioritize Gemini 2.5 Pro for superior interior design analysis:
+        # - Style classification (architectural details, design aesthetics)
+        # - Contextual reasoning (spatial relationships, lighting interactions)
+        # - Material and texture identification
+        # - Atmospheric/mood descriptions
         model_preference = [
-            'gemini-2.5-flash-latest',  # Latest Gemini 2.5 Flash
-            'gemini-2.5-flash',          # Gemini 2.5 Flash (stable)
-            'gemini-2.0-flash-exp',      # Gemini 2.0 Flash (experimental)
-            'gemini-1.5-flash'           # Gemini 1.5 Flash (fallback)
+            'gemini-2.5-pro',            # Best: Deep reasoning, nuanced analysis, style classification
+            'gemini-2.5-flash',          # Good: Fast, accurate, less detailed than Pro
+            'gemini-2.0-flash-exp',      # Fallback: Experimental 2.0
+            'gemini-1.5-pro',            # Fallback: Stable 1.5 Pro
+            'gemini-1.5-flash',          # Fallback: Stable 1.5 Flash
+            'gemini-pro-vision'          # Last resort: older vision model
         ]
 
         for model_name in model_preference:
@@ -124,8 +148,22 @@ Do NOT include the "photo of [trigger_word]" prefix - that will be added automat
             # Rate limiting
             self._rate_limit()
 
-            # Load image
+            # Load image and convert MPO to JPEG for Gemini API compatibility
             image = Image.open(image_path)
+
+            # If image is MPO format, convert to JPEG
+            if image.format == 'MPO':
+                # Convert to RGB (in case it's in a different mode)
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
+
+                # Save as JPEG to a temporary path
+                temp_path = image_path.rsplit('.', 1)[0] + '_temp.jpg'
+                image.save(temp_path, 'JPEG', quality=95)
+
+                # Update image_path to the temporary JPEG
+                image_path = temp_path
+                image = Image.open(image_path)
 
             # Generate caption with retry logic
             def api_call():

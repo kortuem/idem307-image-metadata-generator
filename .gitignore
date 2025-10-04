@@ -49,7 +49,10 @@ Thumbs.db
 # Project Specific
 static/uploads/*
 !static/uploads/.gitkeep
+
+# Exclude generated zip files except example dataset
 *.zip
+!images/**/*.zip
 
 # Logs
 *.log
@@ -61,3 +64,4 @@ htmlcov/
 
 # Vercel
 .vercel
+images/

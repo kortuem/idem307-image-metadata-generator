@@ -584,3 +584,62 @@ body {
         flex-direction: column;
     }
 }
+
+/* Advanced Settings */
+.advanced-settings {
+    margin: 1.5rem 0;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+}
+
+.advanced-settings summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-color);
+    list-style: none;
+    user-select: none;
+}
+
+.advanced-settings summary::-webkit-details-marker {
+    display: none;
+}
+
+.advanced-settings[open] summary {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.advanced-settings .form-group {
+    margin-top: 0;
+}
+
+/* Footer */
+.app-footer {
+    margin-top: 4rem;
+    padding: 2rem 0;
+    text-align: center;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-color);
+    font-size: 0.875rem;
+}
+
+.app-footer p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.app-footer strong {
+    color: var(--text-color);
+}
+
+.app-footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.app-footer a:hover {
+    text-decoration: underline;
+}

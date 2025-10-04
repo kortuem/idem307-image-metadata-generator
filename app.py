@@ -5,9 +5,10 @@ Flask web application for generating training metadata for LoRA models.
 
 import os
 import uuid
+import json
 import logging
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, Response
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
@@ -18,6 +19,9 @@ from utils.metadata_exporter import create_training_zip_in_memory, preview_metad
 
 # Load environment variables
 load_dotenv()
+
+# Load secret access code from environment
+SECRET_ACCESS_CODE = os.getenv('SECRET_ACCESS_CODE', '')
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -216,6 +220,9 @@ def generate_captions():
         captions_result = []
         failed_images = []
 
+        # Log which model we're using
+        logger.info(f"Using Gemini model for caption generation")
+
         # Process each image
         for i, (filename, img_data) in enumerate(images.items(), 1):
             logger.info(f"Processing {filename} ({i}/{len(images)})")
@@ -234,6 +241,7 @@ def generate_captions():
                     'status': 'completed',
                     'edited': False
                 })
+                logger.info(f"✓ Generated caption for {filename}: {caption[:80]}...")
             else:
                 # Mark as failed
                 sessions[session_id]['images'][filename]['status'] = 'failed'
@@ -243,6 +251,7 @@ def generate_captions():
                     'filename': filename,
                     'error': error
                 })
+                logger.error(f"✗ Failed to generate caption for {filename}: {error}")
 
         logger.info(f"Session {session_id}: Generated {len(captions_result)} captions, {len(failed_images)} failed")
 
@@ -256,6 +265,99 @@ def generate_captions():
 
     except Exception as e:
         logger.error(f"Caption generation error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/generate-single', methods=['POST'])
+def generate_single_caption():
+    """Generate caption for a single image."""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        filename = data.get('filename')
+
+        if not session_id or session_id not in sessions:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid session ID'
+            }), 404
+
+        if filename not in sessions[session_id]['images']:
+            return jsonify({
+                'success': False,
+                'error': 'Image not found in session'
+            }), 404
+
+        session_data = sessions[session_id]
+        img_data = session_data['images'][filename]
+        trigger_word = session_data['trigger_word']
+
+        # Get API key or access code from request (REQUIRED)
+        user_input = data.get('api_key', '').strip()
+
+        # Users must provide either:
+        # 1. The secret access code "kind_gemini_key" to use the shared key
+        # 2. Their own Gemini API key
+        if not user_input:
+            return jsonify({
+                'success': False,
+                'error': 'API key or access code required. Please enter your Gemini API key or use the provided access code.'
+            }), 400
+
+        logger.info(f"Generating caption for {filename}")
+
+        # Check if user provided the secret access code from .env
+        # If so, use the default API key from .env (your key)
+        # Otherwise, treat the input as their own Gemini API key
+        if SECRET_ACCESS_CODE and user_input.lower() == SECRET_ACCESS_CODE.lower():
+            # Use shared API key from .env
+            api_key_to_use = None
+            logger.info("Using shared API key (access code provided)")
+        else:
+            # User provided their own API key
+            api_key_to_use = user_input
+            logger.info("Using user-provided API key")
+
+        # Initialize caption generator
+        generator = GeminiCaptionGenerator(
+            trigger_word=trigger_word,
+            api_key=api_key_to_use
+        )
+
+        # Generate caption
+        success, caption, error = generator.generate_caption(img_data['path'])
+
+        if success:
+            # Format with trigger word
+            if trigger_word and not caption.startswith('photo of '):
+                caption = f"photo of {trigger_word} {caption}"
+            elif not caption.startswith('photo of '):
+                caption = f"photo of {caption}"
+
+            # Store caption
+            sessions[session_id]['images'][filename]['caption'] = caption
+            sessions[session_id]['images'][filename]['edited'] = False
+
+            logger.info(f"✓ Generated caption for {filename}: {caption[:80]}...")
+
+            return jsonify({
+                'success': True,
+                'filename': filename,
+                'caption': caption
+            })
+        else:
+            logger.error(f"✗ Failed to generate caption for {filename}: {error}")
+            return jsonify({
+                'success': False,
+                'filename': filename,
+                'error': error
+            }), 500
+
+    except Exception as e:
+        logger.error(f"Error generating caption: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -434,4 +536,5 @@ if __name__ == '__main__':
         logger.warning("Please create a .env file with your API key")
 
     # Run development server
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.getenv('PORT', 5001))
+    app.run(debug=True, host='0.0.0.0', port=port)

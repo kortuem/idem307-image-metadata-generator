@@ -63,8 +63,10 @@ def validate_image(file_path: str, file_size: Optional[int] = None) -> Tuple[boo
 
         # Re-open for format check (verify() closes the file)
         with Image.open(file_path) as img:
-            if img.format.lower() not in ['jpeg', 'png']:
-                return (False, f"Invalid image format: {img.format}")
+            # Accept JPEG, PNG, and MPO (Multi Picture Object - used by some cameras)
+            # MPO files are actually JPEG-based and can be read by Pillow
+            if img.format.lower() not in ['jpeg', 'png', 'mpo']:
+                return (False, f"Invalid image format: {img.format}. Must be JPG, JPEG, PNG, or MPO.")
 
         logger.debug(f"Image validated: {filename}")
         return (True, None)

@@ -45,6 +45,26 @@
                 <p class="hint">Lowercase only, use underscores instead of spaces</p>
             </div>
 
+            <!-- API Key Section (Required) -->
+            <details class="advanced-settings" open>
+                <summary>🔑 API Key (Required)</summary>
+                <div class="form-group">
+                    <label for="api-key">Gemini API Key or Access Code *</label>
+                    <input
+                        type="password"
+                        id="api-key"
+                        placeholder="Enter your Gemini API key or access code"
+                        class="input"
+                        required
+                    >
+                    <p class="hint">
+                        <strong>Required:</strong> Enter your Google Gemini API key or use the provided access code<br>
+                        Get a free API key at <a href="https://aistudio.google.com/" target="_blank">Google AI Studio</a><br>
+                        <em>Powered by Google Gemini 2.5 Pro API</em>
+                    </p>
+                </div>
+            </details>
+
             <button id="generate-btn" class="btn btn-primary" disabled>
                 Generate Captions
             </button>
@@ -133,6 +153,15 @@
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <p>
+            Developed by <strong>Prof. Gerd Kortuem</strong> with <strong>Claude Code</strong><br>
+            TU Delft, Faculty of Industrial Design Engineering |
+            <a href="mailto:g.w.kortuem@tudelft.nl">g.w.kortuem@tudelft.nl</a>
+        </p>
+    </footer>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>

@@ -26,7 +26,15 @@ function log(level, message) {
 
     const debugLogs = document.getElementById('debug-logs');
     debugLogs.appendChild(logEntry);
-    logEntry.scrollIntoView({ behavior: 'smooth' });
+
+    // Only auto-scroll if debug panel is visible AND user is near the bottom
+    const debugContent = document.getElementById('debug-content');
+    if (!debugContent.classList.contains('collapsed')) {
+        const isNearBottom = debugLogs.scrollHeight - debugLogs.scrollTop - debugLogs.clientHeight < 100;
+        if (isNearBottom) {
+            debugLogs.scrollTop = debugLogs.scrollHeight;
+        }
+    }
 
     // Also log to browser console
     console.log(`[${level}] ${message}`);
@@ -138,6 +146,8 @@ async function handleFileUpload(event) {
         if (data.success) {
             state.sessionId = data.session_id;
             state.images = data.images;
+            state.captions = {}; // Reset captions
+            state.currentImageIndex = 0; // Reset editor index
 
             // Show upload info
             document.getElementById('upload-info').style.display = 'flex';
@@ -166,6 +176,18 @@ async function handleFileUpload(event) {
 
             // Enable trigger word input if disabled
             document.getElementById('trigger-word').disabled = false;
+
+            // Reset UI sections - hide editor and export until new captions are generated
+            document.getElementById('editor-section').style.display = 'none';
+            document.getElementById('export-section').style.display = 'none';
+            document.getElementById('progress-section').style.display = 'none';
+
+            // Reset trigger word
+            document.getElementById('trigger-word').value = '';
+            state.triggerWord = '';
+
+            // Disable generate button until trigger word is entered
+            document.getElementById('generate-btn').disabled = true;
         } else {
             log(DEBUG.ERROR, `Upload failed: ${data.error}`);
         }
@@ -239,7 +261,7 @@ async function validateTriggerWord() {
     }
 }
 
-// Generate Captions
+// Generate Captions (one image at a time for real-time progress)
 async function generateCaptions() {
     if (!state.sessionId || !state.triggerWord) {
         log(DEBUG.ERROR, 'Missing session ID or trigger word');
@@ -254,63 +276,81 @@ async function generateCaptions() {
     document.getElementById('progress-section').style.display = 'block';
 
     const totalImages = state.images.length;
+    let processedCount = 0;
+    let successCount = 0;
+
     log(DEBUG.INFO, `Starting caption generation for ${totalImages} images...`);
 
-    try {
-        const response = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+    // Get optional API key from user input
+    const userApiKey = document.getElementById('api-key').value.trim();
+
+    // Process each image individually for real-time updates
+    for (const imageFile of state.images) {
+        const filename = imageFile.filename;
+
+        // Update progress BEFORE processing starts
+        processedCount++;
+        log(DEBUG.INFO, `Processing ${filename} (${processedCount}/${totalImages})`);
+        updateProgress(processedCount, totalImages);
+
+        try {
+            const requestBody = {
                 session_id: state.sessionId,
-                trigger_word: state.triggerWord
-            })
-        });
+                filename: filename
+            };
 
-        const data = await response.json();
-
-        if (data.success) {
-            // Update captions in state
-            data.captions.forEach(item => {
-                state.captions[item.filename] = {
-                    text: item.caption,
-                    edited: false
-                };
-            });
-
-            // Update progress
-            const successCount = data.total_processed;
-            updateProgress(successCount, totalImages);
-
-            log(DEBUG.SUCCESS, `Generated ${successCount} captions`);
-
-            if (data.total_failed > 0) {
-                log(DEBUG.WARNING, `${data.total_failed} captions failed`);
-                data.failed.forEach(f => {
-                    log(DEBUG.ERROR, `${f.filename}: ${f.error}`);
-                });
+            // Include API key if user provided one
+            if (userApiKey) {
+                requestBody.api_key = userApiKey;
             }
 
-            // Show editor and export sections
-            document.getElementById('editor-section').style.display = 'block';
-            document.getElementById('export-section').style.display = 'block';
+            const response = await fetch('/api/generate-single', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
 
-            // Load first image in editor
-            state.currentImageIndex = 0;
-            loadImageInEditor(0);
-        } else {
-            log(DEBUG.ERROR, `Caption generation failed: ${data.error}`);
+            const data = await response.json();
+
+            if (data.success) {
+                // Update caption in state
+                state.captions[filename] = {
+                    text: data.caption,
+                    edited: false
+                };
+                successCount++;
+
+                log(DEBUG.SUCCESS, `✓ Generated caption for ${filename}: ${data.caption.substring(0, 80)}...`);
+            } else {
+                log(DEBUG.ERROR, `✗ Failed to generate caption for ${filename}: ${data.error}`);
+            }
+
+        } catch (error) {
+            log(DEBUG.ERROR, `Error processing ${filename}: ${error.message}`);
         }
-    } catch (error) {
-        log(DEBUG.ERROR, `Caption generation error: ${error.message}`);
-    } finally {
-        generateBtn.disabled = false;
-        generateBtn.textContent = 'Generate Captions';
-
-        // Hide progress after a delay
-        setTimeout(() => {
-            document.getElementById('progress-section').style.display = 'none';
-        }, 2000);
     }
+
+    // All images processed
+    log(DEBUG.SUCCESS, `Completed: ${successCount}/${totalImages} captions generated`);
+
+    if (successCount > 0) {
+        // Show editor and export sections
+        document.getElementById('editor-section').style.display = 'block';
+        document.getElementById('export-section').style.display = 'block';
+
+        // Load first image in editor
+        state.currentImageIndex = 0;
+        loadImageInEditor(0);
+    }
+
+    // Re-enable button
+    generateBtn.disabled = false;
+    generateBtn.textContent = 'Generate Captions';
+
+    // Hide progress after a delay
+    setTimeout(() => {
+        document.getElementById('progress-section').style.display = 'none';
+    }, 2000);
 }
 
 function updateProgress(current, total) {
