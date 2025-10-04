@@ -7,6 +7,7 @@ import os
 import uuid
 import json
 import logging
+import base64
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_file, Response
 from werkzeug.utils import secure_filename
@@ -42,22 +43,31 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Session storage - hybrid approach
-# On Vercel: use in-memory (since /tmp doesn't persist across function calls)
-# Local dev: also use in-memory for consistency
-_sessions = {}
+# Session storage for Vercel compatibility
+# Store everything in /tmp/sessions as JSON files (including base64 images)
+# This works on Vercel because warm containers keep /tmp for 5-15 minutes
+SESSION_FOLDER = Path('/tmp') / 'sessions'
+SESSION_FOLDER.mkdir(parents=True, exist_ok=True)
 
 def save_session(session_id, data):
-    """Save session data to memory."""
-    _sessions[session_id] = data
+    """Save session data to /tmp as JSON file."""
+    session_file = SESSION_FOLDER / f"{session_id}.json"
+    with open(session_file, 'w') as f:
+        json.dump(data, f)
+    logger.info(f"Session {session_id} saved to {session_file}")
 
 def load_session(session_id):
-    """Load session data from memory."""
-    return _sessions.get(session_id)
+    """Load session data from /tmp JSON file."""
+    session_file = SESSION_FOLDER / f"{session_id}.json"
+    if not session_file.exists():
+        logger.error(f"Session {session_id} not found at {session_file}")
+        return None
+    with open(session_file, 'r') as f:
+        return json.load(f)
 
 def session_exists(session_id):
     """Check if session exists."""
-    return session_id in _sessions
+    return (SESSION_FOLDER / f"{session_id}.json").exists()
 
 
 @app.route('/')
@@ -138,6 +148,7 @@ def upload_images():
 
         valid_images = []
         rejected = []
+        images_dict = {}
 
         for file in files:
             if file.filename == '':
@@ -146,9 +157,13 @@ def upload_images():
             # Sanitize filename
             filename = sanitize_filename(file.filename)
 
-            # Save file temporarily
+            # Read file content into memory
+            file_content = file.read()
+
+            # Save file temporarily for validation
             file_path = session_folder / filename
-            file.save(file_path)
+            with open(file_path, 'wb') as f:
+                f.write(file_content)
 
             # Validate image
             is_valid, error = validate_image(str(file_path))
@@ -157,29 +172,38 @@ def upload_images():
                 # Create thumbnail
                 thumbnail = create_thumbnail(str(file_path))
 
+                # Encode image as base64 for session storage
+                image_base64 = base64.b64encode(file_content).decode('utf-8')
+
                 valid_images.append({
                     'filename': filename,
-                    'size': file_path.stat().st_size,
+                    'size': len(file_content),
                     'thumbnail': thumbnail,
                     'status': 'valid'
                 })
+
+                # Store image data in session (as base64)
+                images_dict[filename] = {
+                    'data': image_base64,  # Base64 encoded image
+                    'caption': '',
+                    'edited': False,
+                    'status': 'pending'
+                }
+
+                # Delete temporary file after encoding
+                file_path.unlink()
             else:
                 # Remove invalid file
-                file_path.unlink()
+                if file_path.exists():
+                    file_path.unlink()
                 rejected.append({
                     'filename': filename,
                     'reason': error
                 })
 
-        # Store session data
+        # Store session data with base64 images
         session_data = {
-            'folder': str(session_folder),
-            'images': {img['filename']: {
-                'path': str(session_folder / img['filename']),
-                'caption': '',
-                'edited': False,
-                'status': 'pending'
-            } for img in valid_images},
+            'images': images_dict,
             'trigger_word': ''
         }
         save_session(session_id, session_data)
@@ -349,6 +373,13 @@ def generate_single_caption():
             api_key_to_use = user_input
             logger.info("Using user-provided API key")
 
+        # Decode base64 image and save temporarily
+        image_bytes = base64.b64decode(img_data['data'])
+        temp_image_path = UPLOAD_FOLDER / session_id / filename
+        temp_image_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(temp_image_path, 'wb') as f:
+            f.write(image_bytes)
+
         # Initialize caption generator
         generator = GeminiCaptionGenerator(
             trigger_word=trigger_word,
@@ -356,7 +387,11 @@ def generate_single_caption():
         )
 
         # Generate caption
-        success, caption, error = generator.generate_caption(img_data['path'])
+        success, caption, error = generator.generate_caption(str(temp_image_path))
+
+        # Clean up temporary file
+        if temp_image_path.exists():
+            temp_image_path.unlink()
 
         if success:
             # Format with trigger word
@@ -518,12 +553,21 @@ def export_zip():
             }), 400
         trigger_word = session_data['trigger_word']
 
-        # Prepare image paths and captions
+        # Decode base64 images to temporary files for ZIP creation
+        temp_folder = UPLOAD_FOLDER / session_id
+        temp_folder.mkdir(parents=True, exist_ok=True)
+
         image_paths = {}
         captions = {}
 
         for filename, img_data in session_data['images'].items():
-            image_paths[filename] = img_data['path']
+            # Decode base64 to temporary file
+            image_bytes = base64.b64decode(img_data['data'])
+            temp_path = temp_folder / filename
+            with open(temp_path, 'wb') as f:
+                f.write(image_bytes)
+
+            image_paths[filename] = str(temp_path)
             captions[filename] = img_data['caption']
 
         # Create zip in memory
@@ -532,6 +576,13 @@ def export_zip():
             captions,
             trigger_word
         )
+
+        # Clean up temporary files
+        for temp_path in temp_folder.glob('*'):
+            if temp_path.is_file():
+                temp_path.unlink()
+        if temp_folder.exists():
+            temp_folder.rmdir()
 
         if not success:
             return jsonify({
