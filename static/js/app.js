@@ -132,16 +132,49 @@ async function handleFileUpload(event) {
 
     log(DEBUG.INFO, `Uploading ${files.length} files...`);
 
+    // Show upload progress
+    const progressSection = document.getElementById('progress-section');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    progressSection.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressText.textContent = 'Uploading images...';
+
     const formData = new FormData();
     files.forEach(file => formData.append('images', file));
 
     try {
-        const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData
+        // Create XMLHttpRequest for upload progress tracking
+        const xhr = new XMLHttpRequest();
+
+        // Track upload progress
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                const percentComplete = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percentComplete + '%';
+                progressText.textContent = `Uploading images... ${percentComplete}%`;
+            }
         });
 
-        const data = await response.json();
+        // Convert to Promise
+        const uploadPromise = new Promise((resolve, reject) => {
+            xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(JSON.parse(xhr.responseText));
+                } else {
+                    reject(new Error(`Upload failed: ${xhr.status}`));
+                }
+            });
+            xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+            xhr.open('POST', '/api/upload');
+            xhr.send(formData);
+        });
+
+        const data = await uploadPromise;
+
+        // Update progress to complete
+        progressBar.style.width = '100%';
+        progressText.textContent = 'Upload complete!';
 
         if (data.success) {
             state.sessionId = data.session_id;
