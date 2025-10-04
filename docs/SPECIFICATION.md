@@ -174,7 +174,7 @@ image-metadata-generator/
 
 **FR-3.1: Gemini API Integration**
 
-**Model**: `gemini-2.0-flash-exp` (fallback: `gemini-1.5-flash`)
+**Model**: `gemini-2.5-flash-latest` (fallback chain: 2.5-flash → 2.0-flash-exp → 1.5-flash)
 
 **Prompt Template**:
 ```

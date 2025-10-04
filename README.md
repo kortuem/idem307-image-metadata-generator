@@ -117,7 +117,7 @@ MAX_TOTAL_UPLOAD_MB=100
 
 ### Gemini API
 
-- **Model used**: `gemini-2.0-flash-exp` (fallback: `gemini-1.5-flash`)
+- **Model used**: `gemini-2.5-flash-latest` (with fallbacks to 2.5-flash → 2.0-flash-exp → 1.5-flash)
 - **Free tier limits**: 15 requests/minute, 1500/day
 - **Rate limiting**: 2-second delay between requests (built-in)
 - **Cost**: Free tier covers ~180 images easily

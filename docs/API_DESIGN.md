@@ -577,7 +577,7 @@ Example output for person: "standing, casual jeans and sweater, relaxed expressi
 Do NOT include the "photo of [trigger_word]" prefix - that will be added automatically.
 ```
 
-**Model Used**: `gemini-2.0-flash-exp` (or `gemini-1.5-flash` as fallback)
+**Model Used**: `gemini-2.5-flash-latest` (fallback chain: 2.5-flash → 2.0-flash-exp → 1.5-flash)
 
 **API Call Example**:
 ```python
@@ -585,7 +585,7 @@ import google.generativeai as genai
 from PIL import Image
 
 genai.configure(api_key=os.environ['GEMINI_API_KEY'])
-model = genai.GenerativeModel('gemini-2.0-flash-exp')
+model = genai.GenerativeModel('gemini-2.5-flash-latest')
 
 image = Image.open('photo.jpg')
 response = model.generate_content([VISION_PROMPT, image])

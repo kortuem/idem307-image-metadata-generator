@@ -55,14 +55,24 @@ Do NOT include the "photo of [trigger_word]" prefix - that will be added automat
         # Configure Gemini API
         genai.configure(api_key=self.api_key)
 
-        # Try newest model first, fallback to stable
-        try:
-            self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
-            logger.info("Using Gemini model: gemini-2.0-flash-exp")
-        except Exception as e:
-            logger.warning(f"Failed to load gemini-2.0-flash-exp: {e}")
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
-            logger.info("Using Gemini model: gemini-1.5-flash")
+        # Try newest model first, fallback chain to older stable versions
+        model_preference = [
+            'gemini-2.5-flash-latest',  # Latest Gemini 2.5 Flash
+            'gemini-2.5-flash',          # Gemini 2.5 Flash (stable)
+            'gemini-2.0-flash-exp',      # Gemini 2.0 Flash (experimental)
+            'gemini-1.5-flash'           # Gemini 1.5 Flash (fallback)
+        ]
+
+        for model_name in model_preference:
+            try:
+                self.model = genai.GenerativeModel(model_name)
+                logger.info(f"Using Gemini model: {model_name}")
+                break
+            except Exception as e:
+                logger.warning(f"Failed to load {model_name}: {e}")
+                if model_name == model_preference[-1]:
+                    # Last fallback failed, raise error
+                    raise ValueError(f"Could not initialize any Gemini model. Last error: {e}")
 
     def _rate_limit(self):
         """Enforce rate limiting between API requests."""
