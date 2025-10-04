@@ -42,8 +42,27 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# In-memory session storage
-sessions = {}
+# Session storage helper functions (filesystem-based for Vercel compatibility)
+SESSION_FOLDER = Path('/tmp') / 'sessions'
+SESSION_FOLDER.mkdir(parents=True, exist_ok=True)
+
+def save_session(session_id, data):
+    """Save session data to filesystem."""
+    session_file = SESSION_FOLDER / f"{session_id}.json"
+    with open(session_file, 'w') as f:
+        json.dump(data, f)
+
+def load_session(session_id):
+    """Load session data from filesystem."""
+    session_file = SESSION_FOLDER / f"{session_id}.json"
+    if not session_file.exists():
+        return None
+    with open(session_file, 'r') as f:
+        return json.load(f)
+
+def session_exists(session_id):
+    """Check if session exists."""
+    return (SESSION_FOLDER / f"{session_id}.json").exists()
 
 
 @app.route('/')
@@ -158,7 +177,7 @@ def upload_images():
                 })
 
         # Store session data
-        sessions[session_id] = {
+        session_data = {
             'folder': str(session_folder),
             'images': {img['filename']: {
                 'path': str(session_folder / img['filename']),
@@ -168,6 +187,7 @@ def upload_images():
             } for img in valid_images},
             'trigger_word': ''
         }
+        save_session(session_id, session_data)
 
         logger.info(f"Session {session_id}: Uploaded {len(valid_images)} images, rejected {len(rejected)}")
 
@@ -197,7 +217,8 @@ def generate_captions():
         trigger_word = data.get('trigger_word', '').strip()
 
         # Validate inputs
-        if not session_id or session_id not in sessions:
+        session_data = load_session(session_id)
+        if not session_data:
             return jsonify({
                 'success': False,
                 'error': 'Invalid session ID'
@@ -211,13 +232,14 @@ def generate_captions():
             }), 400
 
         # Update session with trigger word
-        sessions[session_id]['trigger_word'] = trigger_word
+        session_data['trigger_word'] = trigger_word
+        save_session(session_id, session_data)
 
         # Initialize caption generator
         generator = GeminiCaptionGenerator(trigger_word=trigger_word)
 
         # Get images from session
-        images = sessions[session_id]['images']
+        images = session_data['images']
         captions_result = []
         failed_images = []
 
@@ -233,8 +255,9 @@ def generate_captions():
 
             if success:
                 # Update session with caption
-                sessions[session_id]['images'][filename]['caption'] = caption
-                sessions[session_id]['images'][filename]['status'] = 'completed'
+                session_data['images'][filename]['caption'] = caption
+                session_data['images'][filename]['status'] = 'completed'
+                save_session(session_id, session_data)
 
                 captions_result.append({
                     'filename': filename,
@@ -245,8 +268,9 @@ def generate_captions():
                 logger.info(f"✓ Generated caption for {filename}: {caption[:80]}...")
             else:
                 # Mark as failed
-                sessions[session_id]['images'][filename]['status'] = 'failed'
-                sessions[session_id]['images'][filename]['error'] = error
+                session_data['images'][filename]['status'] = 'failed'
+                session_data['images'][filename]['error'] = error
+                save_session(session_id, session_data)
 
                 failed_images.append({
                     'filename': filename,
@@ -280,19 +304,19 @@ def generate_single_caption():
         session_id = data.get('session_id')
         filename = data.get('filename')
 
-        if not session_id or session_id not in sessions:
+        session_data = load_session(session_id)
+        if not session_data:
             return jsonify({
                 'success': False,
                 'error': 'Invalid session ID'
             }), 404
 
-        if filename not in sessions[session_id]['images']:
+        if filename not in session_data['images']:
             return jsonify({
                 'success': False,
                 'error': 'Image not found in session'
             }), 404
 
-        session_data = sessions[session_id]
         img_data = session_data['images'][filename]
         trigger_word = session_data['trigger_word']
 
@@ -339,8 +363,9 @@ def generate_single_caption():
                 caption = f"photo of {caption}"
 
             # Store caption
-            sessions[session_id]['images'][filename]['caption'] = caption
-            sessions[session_id]['images'][filename]['edited'] = False
+            session_data['images'][filename]['caption'] = caption
+            session_data['images'][filename]['edited'] = False
+            save_session(session_id, session_data)
 
             logger.info(f"✓ Generated caption for {filename}: {caption[:80]}...")
 
@@ -374,19 +399,20 @@ def update_caption():
         filename = data.get('filename')
         caption = data.get('caption', '').strip()
 
-        if not session_id or session_id not in sessions:
+        session_data = load_session(session_id)
+        if not session_data:
             return jsonify({
                 'success': False,
                 'error': 'Invalid session ID'
             }), 404
 
-        if filename not in sessions[session_id]['images']:
+        if filename not in session_data['images']:
             return jsonify({
                 'success': False,
                 'error': 'Image not found in session'
             }), 404
 
-        trigger_word = sessions[session_id]['trigger_word']
+        trigger_word = session_data['trigger_word']
 
         # Format caption with trigger word if needed
         if not caption.startswith('photo of '):
@@ -396,8 +422,9 @@ def update_caption():
                 caption = f"photo of {caption}"
 
         # Update caption
-        sessions[session_id]['images'][filename]['caption'] = caption
-        sessions[session_id]['images'][filename]['edited'] = True
+        session_data['images'][filename]['caption'] = caption
+        session_data['images'][filename]['edited'] = True
+        save_session(session_id, session_data)
 
         logger.info(f"Session {session_id}: Caption updated for {filename}")
 
@@ -419,13 +446,12 @@ def update_caption():
 @app.route('/api/captions/<session_id>', methods=['GET'])
 def get_captions(session_id):
     """Get all captions for a session."""
-    if session_id not in sessions:
+    session_data = load_session(session_id)
+    if not session_data:
         return jsonify({
             'success': False,
             'error': 'Session not found'
         }), 404
-
-    session_data = sessions[session_id]
     captions = []
     edited_count = 0
 
@@ -451,13 +477,12 @@ def get_captions(session_id):
 @app.route('/api/preview/<session_id>', methods=['GET'])
 def preview_metadata(session_id):
     """Preview metadata.txt content."""
-    if session_id not in sessions:
+    session_data = load_session(session_id)
+    if not session_data:
         return jsonify({
             'success': False,
             'error': 'Session not found'
         }), 404
-
-    session_data = sessions[session_id]
     captions = {filename: img_data['caption']
                 for filename, img_data in session_data['images'].items()}
 
@@ -482,13 +507,12 @@ def export_zip():
         data = request.get_json()
         session_id = data.get('session_id')
 
-        if not session_id or session_id not in sessions:
+        session_data = load_session(session_id)
+        if not session_data:
             return jsonify({
                 'success': False,
                 'error': 'Invalid session ID'
             }), 400
-
-        session_data = sessions[session_id]
         trigger_word = session_data['trigger_word']
 
         # Prepare image paths and captions
