@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Metadata Generator for LoRA Training</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Image Metadata Generator</h1>
+            <p class="subtitle">Prepare image datasets for LoRA training on Replicate</p>
+        </header>
+
+        <!-- Upload Section -->
+        <section class="upload-section">
+            <div class="upload-area">
+                <input type="file" id="image-upload" multiple accept="image/*" style="display: none;">
+                <label for="image-upload" class="upload-label">
+                    <div class="upload-icon">📁</div>
+                    <p>Click to upload images</p>
+                    <p class="upload-hint">or drag and drop JPG, JPEG, PNG files</p>
+                </label>
+            </div>
+
+            <div class="upload-info" id="upload-info" style="display: none;">
+                <span id="upload-count">0 images selected</span>
+                <button id="clear-upload" class="btn btn-secondary">Clear</button>
+            </div>
+        </section>
+
+        <!-- Trigger Word Section -->
+        <section class="trigger-section">
+            <div class="form-group">
+                <label for="trigger-word">Trigger Word</label>
+                <input
+                    type="text"
+                    id="trigger-word"
+                    placeholder="e.g., ide_main_hall, ide_person"
+                    class="input"
+                >
+                <div id="trigger-validation" class="validation-message"></div>
+                <p class="hint">Lowercase only, use underscores instead of spaces</p>
+            </div>
+
+            <button id="generate-btn" class="btn btn-primary" disabled>
+                Generate Captions
+            </button>
+        </section>
+
+        <!-- Progress Section -->
+        <section class="progress-section" id="progress-section" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+            <p id="progress-text">Processing 0 of 0...</p>
+        </section>
+
+        <!-- Image Grid Section -->
+        <section class="gallery-section" id="gallery-section" style="display: none;">
+            <h2>Images & Captions</h2>
+            <div class="image-grid" id="image-grid"></div>
+        </section>
+
+        <!-- Caption Editor Section -->
+        <section class="editor-section" id="editor-section" style="display: none;">
+            <div class="editor-container">
+                <div class="editor-preview">
+                    <img id="preview-image" src="" alt="Preview">
+                    <p id="preview-filename" class="filename"></p>
+                </div>
+
+                <div class="editor-caption">
+                    <label for="caption-text">Caption</label>
+                    <textarea
+                        id="caption-text"
+                        rows="4"
+                        class="textarea"
+                        placeholder="Caption will appear here..."
+                    ></textarea>
+                    <div class="editor-status">
+                        <span id="edit-indicator" class="indicator"></span>
+                        <span id="caption-count" class="char-count"></span>
+                    </div>
+                </div>
+
+                <div class="editor-nav">
+                    <button id="prev-btn" class="btn btn-secondary">← Previous</button>
+                    <span id="nav-position">1 of 1</span>
+                    <button id="next-btn" class="btn btn-secondary">Next →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Export Section -->
+        <section class="export-section" id="export-section" style="display: none;">
+            <div class="export-actions">
+                <button id="preview-btn" class="btn btn-secondary">Preview metadata.txt</button>
+                <button id="export-btn" class="btn btn-primary">Export Training Zip</button>
+            </div>
+        </section>
+
+        <!-- Debug Console -->
+        <section class="debug-section">
+            <div class="debug-header" id="debug-header">
+                <span>Debug Console</span>
+                <button id="toggle-debug" class="btn-toggle">▼</button>
+            </div>
+            <div class="debug-content" id="debug-content">
+                <div id="debug-logs" class="debug-logs"></div>
+                <div class="debug-actions">
+                    <button id="clear-logs" class="btn btn-sm">Clear</button>
+                    <button id="copy-logs" class="btn btn-sm">Copy Logs</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="preview-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>metadata.txt Preview</h2>
+                <button class="modal-close" id="close-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <pre id="preview-content"></pre>
+            </div>
+            <div class="modal-footer">
+                <button id="modal-close-btn" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
