@@ -1,5 +1,11 @@
 # Claude Project Instructions
 
+> **Note for students/users**: This file contains development instructions for Claude Code (AI coding assistant).
+> If you're looking for how to USE the app, see [README.md](README.md) or [TUTORIAL.md](TUTORIAL.md) instead.
+> This file is for developers who want to understand or modify the code.
+
+---
+
 **STATUS**: ✅ PRODUCTION - Deployed for TU Delft IDEM307 Workshop
 
 ## Project Overview
