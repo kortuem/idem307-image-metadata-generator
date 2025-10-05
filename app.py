@@ -134,9 +134,13 @@ def health_check():
             'error': 'GEMINI_API_KEY environment variable not set'
         }), 503
 
+    # Check if access code is configured (for debugging)
+    access_code_configured = bool(SECRET_ACCESS_CODE and SECRET_ACCESS_CODE.strip())
+
     return jsonify({
         'status': 'healthy',
         'api_key_configured': True,
+        'access_code_configured': access_code_configured,
         'version': '2.0.0',
         'capacity': {
             'active_sessions': active_count,
@@ -463,10 +467,10 @@ def generate_single_caption():
         # Check if user provided the secret access code from .env
         if SECRET_ACCESS_CODE and user_input.lower() == SECRET_ACCESS_CODE.lower():
             api_key_to_use = None  # Use shared API key from .env
-            logger.info("Using shared API key (access code provided)")
+            logger.info("Using shared API key (access code matched)")
         else:
             api_key_to_use = user_input  # User-provided API key
-            logger.info("Using user-provided API key")
+            logger.info(f"Using user-provided API key (access code did not match, expected: {SECRET_ACCESS_CODE[:4] if SECRET_ACCESS_CODE else 'NOT_SET'}...)")
 
         # Decode base64 image and save temporarily
         image_bytes = base64.b64decode(img_data['data'])
