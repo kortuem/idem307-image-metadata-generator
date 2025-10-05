@@ -29,6 +29,24 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', os.urandom(24))
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max upload
 
+# Get build/deploy time from last git commit
+def get_deploy_time():
+    """Get deployment time from last git commit."""
+    try:
+        import subprocess
+        from datetime import datetime
+        result = subprocess.check_output(
+            ['git', 'log', '-1', '--format=%cI'],
+            text=True,
+            stderr=subprocess.DEVNULL
+        ).strip()
+        commit_date = datetime.fromisoformat(result.replace('Z', '+00:00'))
+        return commit_date.strftime('%B %d, %Y at %I:%M %p UTC')
+    except:
+        return 'October 2025'
+
+DEPLOY_TIME = get_deploy_time()
+
 # Configure upload folder
 # Use /tmp for Vercel serverless compatibility (read-only filesystem)
 UPLOAD_FOLDER = Path('/tmp') / 'uploads'
@@ -129,7 +147,7 @@ def is_capacity_available():
 @app.route('/')
 def index():
     """Serve the main application page."""
-    return render_template('index.html')
+    return render_template('index.html', deploy_time=DEPLOY_TIME)
 
 
 @app.route('/api/health', methods=['GET'])
