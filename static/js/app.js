@@ -40,9 +40,44 @@ function log(level, message) {
     console.log(`[${level}] ${message}`);
 }
 
+// Theme Management
+function initializeTheme() {
+    // Get saved theme preference or use system preference
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+
+    setTheme(theme);
+}
+
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+
+    // Update icon visibility
+    const lightIcon = document.getElementById('theme-icon-light');
+    const darkIcon = document.getElementById('theme-icon-dark');
+
+    if (theme === 'dark') {
+        lightIcon.style.display = 'none';
+        darkIcon.style.display = 'block';
+    } else {
+        lightIcon.style.display = 'block';
+        darkIcon.style.display = 'none';
+    }
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    log(DEBUG.INFO, `Theme switched to ${newTheme} mode`);
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     log(DEBUG.INFO, 'Application initialized');
+    initializeTheme();
     initializeEventListeners();
     checkAPIHealth();
 });
@@ -104,6 +139,9 @@ function initializeEventListeners() {
     // Modal
     document.getElementById('close-modal').addEventListener('click', closeModal);
     document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+
+    // Theme toggle
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 }
 
 // API Health Check

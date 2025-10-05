@@ -5,6 +5,7 @@
     box-sizing: border-box;
 }
 
+/* Light Theme (Default) */
 :root {
     --primary-color: #2563eb;
     --primary-hover: #1d4ed8;
@@ -23,6 +24,27 @@
     --border-radius: 8px;
     --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    /* Dark theme based on slate/sky colors */
+    --primary-color: #0ea5e9;      /* sky-500 */
+    --primary-hover: #38bdf8;      /* sky-400 */
+    --secondary-color: #94a3b8;    /* slate-400 */
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --info-color: #0ea5e9;
+
+    --bg-color: #0f172a;           /* slate-950 */
+    --surface-color: #1e293b99;    /* slate-900/60 */
+    --border-color: #334155;       /* slate-700 */
+    --text-color: #f1f5f9;         /* slate-100 */
+    --text-muted: #94a3b8;         /* slate-400 */
+
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.4);
 }
 
 body {
@@ -642,4 +664,64 @@ body {
 
 .app-footer a:hover {
     text-decoration: underline;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+    z-index: 1000;
+}
+
+.theme-toggle:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: scale(1.05);
+}
+
+.theme-toggle svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Dark theme specific adjustments */
+[data-theme="dark"] .upload-area {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: #475569;
+}
+
+[data-theme="dark"] .upload-area:hover,
+[data-theme="dark"] .upload-area.dragover {
+    border-color: var(--primary-color);
+    background: rgba(14, 165, 233, 0.1);
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: #475569;
+    color: var(--text-color);
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus {
+    border-color: var(--primary-color);
+    background: rgba(15, 23, 42, 0.8);
+}
+
+[data-theme="dark"] .modal-content {
+    background: #1e293b;
 }
