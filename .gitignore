@@ -30,6 +30,10 @@ ENV/
 .env
 .env.local
 
+# Claude Code Instructions (local development only)
+claude.md
+CLAUDE.md
+
 # IDE
 .vscode/
 .idea/

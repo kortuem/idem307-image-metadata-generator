@@ -121,7 +121,7 @@ http://localhost:5001
 
 ## Deployment (Render.com)
 
-The app is deployed on Render.com (free tier). See [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for detailed deployment instructions.
+The app is deployed on Render.com (free tier). See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md) for detailed deployment instructions.
 
 **Why Render over Vercel:**
 - ✅ Supports long-running processes (caption generation takes ~18s per image)
@@ -139,7 +139,9 @@ The app is deployed on Render.com (free tier). See [RENDER_DEPLOYMENT.md](RENDER
 - **AI Model**: Google Gemini 2.5 Pro vision API
 - **Frontend**: Vanilla JavaScript (no frameworks)
 - **Deployment**: Render.com (stateful, persistent)
-- **Storage**: Session-based with base64 encoding for Vercel compatibility
+- **Storage**: Session-based with base64 encoding
+
+For detailed architecture information, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ### Gemini API
 
@@ -165,8 +167,13 @@ image-metadata-generator/
 ├── static/
 │   ├── css/styles.css       # Application styles
 │   └── js/app.js            # Frontend JavaScript
+├── docs/                    # Documentation
+│   ├── ARCHITECTURE.md      # Technical architecture
+│   ├── DEPLOYMENT-RENDER.md # Deployment guide
+│   └── DEVELOPMENT.md       # Developer workflow
 ├── TUTORIAL.md              # Student tutorial
-└── RENDER_DEPLOYMENT.md     # Deployment guide
+├── README.md                # This file
+└── claude.md                # Claude Code instructions
 ```
 
 ---
@@ -241,6 +248,16 @@ MIT License - Free to use for educational and personal projects.
 
 ---
 
+## Documentation
+
+- **[README.md](README.md)** - Project overview (this file)
+- **[TUTORIAL.md](TUTORIAL.md)** - Step-by-step student guide
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Technical architecture
+- **[docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md)** - Deployment guide
+- **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Developer workflow
+
+---
+
 **🌐 Live App**: https://idem307-image-metadata-generator.onrender.com/
 **📖 Tutorial**: [TUTORIAL.md](TUTORIAL.md)
-**🚀 Deploy Guide**: [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)
+**🚀 Deploy Guide**: [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md)
