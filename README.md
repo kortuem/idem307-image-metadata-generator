@@ -1,21 +1,40 @@
 # Image Metadata Generator for LoRA Training
 
-Automated caption generation tool for preparing image datasets for LoRA fine-tuning on Replicate.com.
+Automated caption generation tool for preparing image datasets for FLUX LoRA fine-tuning on Replicate.com.
+
+**🌐 Live App**: https://idem307-image-metadata-generator.onrender.com/
+
+**📖 Student Tutorial**: See [TUTORIAL.md](TUTORIAL.md) for step-by-step instructions
+
+---
 
 ## Overview
 
-This web application automates the time-consuming task of writing captions for image training datasets. It uses Google's Gemini vision AI to generate structured, consistent captions, then allows manual editing for quality control.
+This web application automates the time-consuming task of writing captions for image training datasets. It uses Google's Gemini vision AI to generate structured, consistent captions in the format required by Replicate.com for FLUX LoRA fine-tuning.
 
-**Time savings**: Process 30 images in 20-30 minutes (vs. 2-3 hours manually)
+**Time savings**: Process 30 images in ~10 minutes (vs. 2-3 hours manually)
 
-## Features
+**Built for**: IDEM307 Generative AI and Design - TU Delft
+**Developed by**: Prof. Gerd Kortuem with Claude Code
+**Contact**: g.w.kortuem@tudelft.nl
 
-- 📁 **Batch Upload**: Upload 20-100 images via drag-and-drop or file selection
-- 🤖 **AI Caption Generation**: Automated captions using Google Gemini vision API
-- ✏️ **Manual Editing**: Review and refine captions with intuitive image editor
-- 📊 **Progress Tracking**: Real-time progress indicators and debug console
-- 📦 **Replicate Export**: One-click export to Replicate-compatible zip format
-- 🎨 **Clean UI**: Modern, responsive interface with keyboard shortcuts
+---
+
+## Quick Start (For Students)
+
+### Using the Hosted Version (Easiest)
+
+1. Go to: https://idem307-image-metadata-generator.onrender.com/
+2. Upload 20-40 images from your dataset
+3. Enter your trigger word (e.g., `ide_main_hall`)
+4. Enter the access code provided by your instructor
+5. Generate captions (takes ~18 seconds per image)
+6. Download the training ZIP file
+7. Upload to Replicate.com
+
+**See [TUTORIAL.md](TUTORIAL.md) for detailed step-by-step instructions with screenshots.**
+
+---
 
 ## Example Datasets
 
@@ -29,19 +48,52 @@ Practice with these example image datasets from TU Delft campus spaces:
 
 Download, extract, and use these to test the tool!
 
-## Quick Start
+---
+
+## Features
+
+- 📁 **Batch Upload**: Upload 20-100 images via drag-and-drop
+- 🤖 **AI Caption Generation**: Automated captions using Google Gemini 2.5 Pro
+- ✏️ **Manual Editing**: Review and refine captions with image-by-image editor
+- 📊 **Progress Tracking**: Real-time upload and generation progress
+- 📦 **Replicate Export**: One-click export to Replicate-compatible ZIP format
+- 🎨 **Clean UI**: Modern, responsive interface
+
+---
+
+## Output Format
+
+The exported ZIP file is ready for Replicate.com FLUX LoRA training:
+
+```
+trigger_word_training.zip
+├── image1.jpg
+├── image1.txt          ← "photo of trigger_word description..."
+├── image2.jpg
+├── image2.txt          ← "photo of trigger_word description..."
+└── ...
+```
+
+Each image has a matching `.txt` file with its caption in Replicate's required format:
+```
+photo of ide_main_hall entrance area, glass doors, high ceiling, natural daylight
+```
+
+---
+
+## Running Locally (For Development)
 
 ### Prerequisites
 
 - Python 3.9+
-- Google Gemini API key ([Get one here](https://aistudio.google.com/))
+- Google Gemini API key ([Get free key](https://aistudio.google.com/))
 
 ### Installation
 
 1. **Clone the repository**
 ```bash
-git clone <your-repo-url>
-cd image-metadata-generator
+git clone https://github.com/kortuem/idem307-image-metadata-generator.git
+cd idem307-image-metadata-generator
 ```
 
 2. **Install dependencies**
@@ -49,264 +101,146 @@ cd image-metadata-generator
 pip install -r requirements.txt
 ```
 
-3. **Get a Gemini API Key**
-   - Go to [Google AI Studio](https://aistudio.google.com/)
-   - Sign in with your Google account
-   - Click "Get API Key" → "Create API Key"
-   - Copy your API key
-
-4. **Configure environment** (optional - for shared deployments only)
+3. **Configure environment**
 ```bash
 cp .env.example .env
 # Edit .env and add your GEMINI_API_KEY
-# Optionally add SECRET_ACCESS_CODE if you want to share access with others
 ```
 
-5. **Run the application**
+4. **Run the application**
 ```bash
 python app.py
 ```
 
-6. **Open in browser**
+5. **Open in browser**
 ```
-http://localhost:5000
-```
-
-## Usage
-
-### Step-by-Step Workflow
-
-1. **Upload Images**
-   - Click upload area or drag-and-drop 20-40 JPG/PNG images
-   - Images are validated and thumbnails generated
-
-2. **Enter Trigger Word**
-   - Type your trigger word (e.g., `ide_main_hall`, `ide_person`)
-   - Must be lowercase, underscores only, no spaces
-
-3. **Enter API Key**
-   - Enter your Gemini API key (from [Google AI Studio](https://aistudio.google.com/))
-   - Or use provided access code (if deployer shared one with you)
-
-4. **Generate Captions**
-   - Click "Generate Captions"
-   - Wait 2-3 minutes for batch processing (~2s per image)
-
-5. **Review & Edit**
-   - Click thumbnails to navigate images
-   - Edit captions in the textarea
-   - Changes auto-save
-   - Use arrow keys for quick navigation
-
-6. **Export**
-   - Click "Preview metadata.txt" to review final output
-   - Click "Export Training Zip" to download
-   - Upload zip file to Replicate
-
-### Output Format
-
-The exported zip file contains:
-```
-trigger_word_training.zip
-├── IMG_001.jpg
-├── IMG_002.jpg
-├── ...
-└── metadata.txt
+http://localhost:5001
 ```
 
-**metadata.txt** format (one line per image):
-```
-photo of ide_main_hall entrance area, glass doors, high ceiling, natural daylight
-photo of ide_main_hall corridor view, seating areas, modern lighting fixtures
-photo of ide_main_hall staircase detail, metal railings, concrete steps
-```
+---
 
-## Configuration
+## Deployment (Render.com)
 
-### Environment Variables
+The app is deployed on Render.com (free tier). See [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md) for detailed deployment instructions.
 
-Create a `.env` file (copy from `.env.example`):
+**Why Render over Vercel:**
+- ✅ Supports long-running processes (caption generation takes ~18s per image)
+- ✅ Persistent sessions (no "Invalid session ID" errors)
+- ✅ No timeout limits on free tier
+- ✅ Works perfectly with Flask apps
 
-```bash
-# Required
-GEMINI_API_KEY=your_gemini_api_key_here
+---
 
-# Optional: Secret access code (for shared deployments)
-# If set, users can enter this code instead of their own API key
-# Choose your own unique code (e.g., "myclass2024")
-SECRET_ACCESS_CODE=your_chosen_secret_code
+## Technical Details
 
-# Optional: Flask settings
-FLASK_ENV=development
-FLASK_DEBUG=True
-MAX_FILE_SIZE_MB=10
-MAX_TOTAL_UPLOAD_MB=100
-```
+### Architecture
 
-**Getting a Gemini API Key:**
-1. Visit [Google AI Studio](https://aistudio.google.com/)
-2. Sign in with Google account
-3. Click "Get API Key" → "Create API Key"
-4. Copy and paste into `.env` file
+- **Backend**: Flask (Python)
+- **AI Model**: Google Gemini 2.5 Pro vision API
+- **Frontend**: Vanilla JavaScript (no frameworks)
+- **Deployment**: Render.com (stateful, persistent)
+- **Storage**: Session-based with base64 encoding for Vercel compatibility
 
 ### Gemini API
 
-- **Model used**: `gemini-2.5-pro` (with fallbacks to 2.5-flash → 2.0-flash-exp → 1.5-pro → 1.5-flash)
-- **Free tier limits**: 15 requests/minute, 1500/day
+- **Model**: `gemini-2.5-pro` (best quality for image analysis)
+- **Free tier**: 15 requests/minute, 1500/day
 - **Rate limiting**: 2-second delay between requests (built-in)
-- **Cost**: Free tier covers ~180 images easily
-
-## Development
+- **Cost**: Free tier covers ~750 images/day
 
 ### Project Structure
 
 ```
 image-metadata-generator/
-├── app.py                 # Flask application
-├── requirements.txt       # Python dependencies
-├── .env                   # Environment variables (gitignored)
-├── docs/                  # Documentation
-│   ├── SPECIFICATION.md
-│   ├── DEVELOPMENT_PLAN.md
-│   └── API_DESIGN.md
-├── utils/                 # Backend utilities
-│   ├── caption_generator.py
-│   ├── image_processor.py
-│   ├── validators.py
-│   └── metadata_exporter.py
-├── templates/             # HTML templates
-│   └── index.html
-├── static/                # Frontend assets
-│   ├── css/styles.css
-│   ├── js/app.js
-│   └── uploads/           # Temporary image storage
-└── PROJECT_BRIEF.md       # Original requirements
+├── app.py                    # Flask application & API endpoints
+├── requirements.txt          # Python dependencies
+├── .env                      # Environment variables (gitignored)
+├── utils/                    # Backend utilities
+│   ├── caption_generator.py  # Gemini AI integration
+│   ├── image_processor.py    # Image validation & thumbnails
+│   ├── validators.py         # Trigger word validation
+│   └── metadata_exporter.py  # ZIP file creation
+├── templates/
+│   └── index.html           # Main application UI
+├── static/
+│   ├── css/styles.css       # Application styles
+│   └── js/app.js            # Frontend JavaScript
+├── TUTORIAL.md              # Student tutorial
+└── RENDER_DEPLOYMENT.md     # Deployment guide
 ```
 
-### Running Tests
+---
 
-Manual testing checklist:
+## Environment Variables
 
-1. Upload 5 test images
-2. Enter trigger word "test_space"
-3. Generate captions (wait ~10 seconds)
-4. Edit 2 captions manually
-5. Preview metadata.txt
-6. Export zip and verify contents
-
-### Debug Console
-
-The built-in debug console shows:
-- 🔵 **INFO**: Normal operations (uploads, processing)
-- 🟢 **SUCCESS**: Completed operations (captions generated)
-- 🟡 **WARNING**: Non-critical issues (retries, rejections)
-- 🔴 **ERROR**: Failures (API errors, validation failures)
-
-Toggle with the "Debug Console" button at the bottom.
-
-## Deployment (Vercel)
-
-### Prerequisites
-
-- GitHub repository
-- Vercel account (free tier works)
-
-### Steps
-
-1. **Push to GitHub**
 ```bash
-git add .
-git commit -m "Initial commit"
-git push origin main
+# Required: Your Gemini API key
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Optional: Secret access code for sharing
+# Students can use this code instead of their own API key
+SECRET_ACCESS_CODE=your_chosen_code
 ```
 
-2. **Connect to Vercel**
-   - Go to [Vercel Dashboard](https://vercel.com)
-   - Import GitHub repository
-   - Framework preset: "Other"
-
-3. **Configure Environment Variables**
-   - In Vercel project settings → Environment Variables
-   - Add: `GEMINI_API_KEY` = your_gemini_api_key (from [Google AI Studio](https://aistudio.google.com/))
-   - Add: `SECRET_ACCESS_CODE` = your_chosen_secret_code (optional - for sharing with students/users)
-
-4. **Deploy**
-   - Vercel auto-deploys on every push to main
-   - Share URL with students: `https://your-project.vercel.app`
-
-### Vercel Notes
-
-- Files uploaded to `/tmp` (temporary storage, auto-deleted)
-- 10-second function timeout (handled with proper response streaming)
-- No persistent database needed (session-based)
+---
 
 ## Troubleshooting
 
 ### Common Issues
 
-**"GEMINI_API_KEY not found"**
-- Check `.env` file exists and contains `GEMINI_API_KEY=your_key`
-- Restart Flask server after adding key
+**"API key or access code required"**
+- Enter your Gemini API key OR the access code provided by instructor
+- Get free API key at: https://aistudio.google.com/
 
-**"Rate limit exceeded"**
-- Gemini free tier: 15 req/min
-- App adds 2s delay automatically
-- Wait 60 seconds and retry
-
-**"Image validation failed"**
-- Only JPG, JPEG, PNG supported
-- Max file size: 10MB per image
-- Check image isn't corrupted (try opening in image viewer)
+**Upload seems to hang**
+- Check browser console (F12) for errors
+- Hard refresh browser (Cmd+Shift+R / Ctrl+Shift+R)
+- First deployment may take 30s to wake up (cold start)
 
 **Captions not generating**
-- Check debug console for API errors
 - Verify API key is valid
-- Check internet connection
+- Check you entered trigger word first
+- Each image takes ~18 seconds to process
 
-**Upload fails on large batches**
-- Max total upload: 100MB
-- Max 100 images per session
-- Split into smaller batches if needed
-
-### Getting Help
-
-- Check [docs/SPECIFICATION.md](docs/SPECIFICATION.md) for technical details
-- Check [docs/API_DESIGN.md](docs/API_DESIGN.md) for endpoint documentation
-- Review debug console logs for error messages
-
-## Roadmap
-
-### Completed ✅
-- ✅ Image upload and validation
-- ✅ Gemini API integration
-- ✅ Automated caption generation
-- ✅ Caption editing interface
-- ✅ Metadata export to Replicate format
-- ✅ Debug console
-
-### Future Enhancements 🚀
-- 🔜 Keyboard shortcuts (arrow keys implemented)
-- 🔜 Batch caption editing
-- 🔜 Caption templates/presets
-- 🔜 Save/load projects
-- 🔜 Multi-language support
-- 🔜 Local vision models (offline mode)
-
-## License
-
-MIT License - Use freely for educational and personal projects.
-
-## Credits
-
-Developed by **Prof. Gerd Kortuem** with **Claude Code**
-TU Delft, Faculty of Industrial Design Engineering
-Contact: [g.w.kortuem@tudelft.nl](mailto:g.w.kortuem@tudelft.nl)
-
-**Built for**: IDEM307 Generative AI and Design - TU Delft
-**Powered by**: Google Gemini 2.5 Pro API
-**Designed for**: Replicate.com FLUX LoRA fine-tuning
+**"Invalid session ID" errors**
+- Should not happen on Render deployment
+- If occurs on Vercel, the platform doesn't support this app
 
 ---
 
-**Version**: 2.0.0
-**Last Updated**: October 2025
+## Version History
+
+**v1.0** (January 2025)
+- ✅ Initial production release
+- ✅ Deployed on Render.com
+- ✅ Full Replicate.com FLUX LoRA format support
+- ✅ Upload progress tracking
+- ✅ Base64 session storage for stateless platforms
+- ✅ Secret access code sharing
+
+---
+
+## Credits
+
+**Developed by**: Prof. Gerd Kortuem
+**With**: Claude Code (Anthropic)
+**Institution**: TU Delft, Faculty of Industrial Design Engineering
+**Course**: IDEM307 Generative AI and Design
+**Contact**: g.w.kortuem@tudelft.nl
+
+**Powered by**:
+- Google Gemini 2.5 Pro API
+- Replicate.com FLUX LoRA training format
+- Render.com (hosting)
+
+---
+
+## License
+
+MIT License - Free to use for educational and personal projects.
+
+---
+
+**🌐 Live App**: https://idem307-image-metadata-generator.onrender.com/
+**📖 Tutorial**: [TUTORIAL.md](TUTORIAL.md)
+**🚀 Deploy Guide**: [RENDER_DEPLOYMENT.md](RENDER_DEPLOYMENT.md)

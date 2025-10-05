@@ -1,27 +1,36 @@
-# Image Metadata Generator - User Tutorial
+# Image Metadata Generator - Student Tutorial
 
-## What is This Tool?
+**🌐 Access the tool**: https://idem307-image-metadata-generator.onrender.com/
 
-The **Image Metadata Generator** is a web application that automatically creates detailed, AI-generated descriptions for your images. It's primarily designed to help you prepare training data for fine-tuning AI image models (like FLUX on Replicate.com), but it can also be used for:
-
-- Creating detailed image captions for machine learning datasets
-- Generating descriptive metadata for image libraries
-- Building training data for custom AI models
-- Archiving images with rich textual descriptions
-
-The tool uses Google's advanced **Gemini 2.5 Pro AI model** to analyze your images and generate professional, detailed descriptions that capture:
-- The main subject and objects
-- The environment and setting
-- Photographic style and composition
-- Colors, materials, and textures
-- Spatial relationships between elements
-- Mood and atmosphere
+This tutorial will guide you through preparing your image dataset for FLUX LoRA fine-tuning on Replicate.com.
 
 ---
 
-## Example Datasets
+## What You'll Need
 
-Want to try it out first? Download these example image datasets from TU Delft campus spaces:
+✅ **20-40 images** of the same subject/space (JPG or PNG format)
+✅ **Access code** from your instructor (or your own Gemini API key)
+✅ **~10-15 minutes** of time
+
+---
+
+## What This Tool Does
+
+The Image Metadata Generator automatically creates detailed, AI-generated captions for your images in the exact format required by Replicate.com for FLUX LoRA training.
+
+**Example caption:**
+```
+photo of ide_main_hall entrance area with glass doors, high ceiling,
+natural daylight, open space, modern architecture
+```
+
+Each image gets a unique, descriptive caption that helps the AI learn what makes your subject/space unique.
+
+---
+
+## Example Datasets (Practice First!)
+
+Before using your own images, try the tool with these example datasets from TU Delft:
 
 - [IDE Drawing Studio](https://www.dropbox.com/scl/fi/a0a4qglv2xfd16hzdulnp/IDE-Drawing-Studio.zip?rlkey=uaoo41ldb8nnbgul8yn9er7m3&dl=0) (24 images)
 - [IDE Lecture Hall](https://www.dropbox.com/scl/fi/c7r4pq0hct6539s3e8pe4/IDE-Lecture-Hall.zip?rlkey=ht5u3zvn7oo30svm2ps9gglrl&dl=0) (39 images)
@@ -29,322 +38,300 @@ Want to try it out first? Download these example image datasets from TU Delft ca
 - [IDE Studio](https://www.dropbox.com/scl/fi/vgykhjs3o8okbd637vltr/IDE-Studio.zip?rlkey=x0sru5uw2ubi886vs2z2q6lp8&dl=0) (47 images)
 - [SDE Hallway](https://www.dropbox.com/scl/fi/ihxy8f0bi7o3z87yr79ez/SDE-Hallway.zip?rlkey=3gzeys2z38autw3vyax2dutg2&dl=0) (38 images)
 
-**How to use:**
-1. Click any link above to download a ZIP file
-2. Extract the images to a folder on your computer
-3. Follow the tutorial below to process them!
-
----
-
-## How It Works (Simple Overview)
-
-1. **Upload your images** → The tool stores them temporarily
-2. **Choose a trigger word** → A unique identifier for your image set
-3. **Generate captions** → AI analyzes each image and writes a detailed description
-4. **Review & edit** → Manually refine any captions if needed
-5. **Download** → Get a ready-to-use ZIP file for Replicate or other platforms
+Download one, extract the images, and follow the steps below!
 
 ---
 
 ## Step-by-Step Instructions
 
-### Step 1: Upload Your Images
-
-1. Open the application in your web browser (typically at `http://127.0.0.1:5001`)
-2. Click the **"Choose Files"** button or drag-and-drop images onto the upload area
-3. Select all the images you want to caption (you can select multiple files at once)
-4. Wait for the upload confirmation showing how many images were accepted
+### Step 1: Prepare Your Images
 
 **Image Requirements:**
-- ✅ **Formats supported:** JPG, JPEG, PNG, WebP, MPO
-- ✅ **Resolution:** 1024×1024 pixels or higher recommended
-- ✅ **Aspect ratio:** Any (square, landscape, portrait all work)
-- ✅ **File size:** Individual images should be under 7MB
-- ✅ **Quantity:** Minimum 2 images, recommended 10-25 images for fine-tuning
+- ✅ **Format**: JPG, JPEG, or PNG
+- ✅ **Quantity**: 20-100 images (30-40 is ideal)
+- ✅ **Subject**: All images should be of the SAME subject/space/person
+- ✅ **Variety**: Different angles, lighting, distances
+- ✅ **Size**: Max 10MB per image
 
-**Example:**
-If you're preparing to fine-tune an AI model to generate images of "a modern architecture studio," you'd upload 10-25 photos of that space from different angles and lighting conditions.
+**Tips for good training data:**
+- Include close-ups AND wide shots
+- Capture different times of day (if outdoors)
+- Show different angles and perspectives
+- Include the subject doing different things (for people)
+- Ensure good image quality (not blurry)
 
 ---
 
-### Step 2: Enter a Trigger Word
+### Step 2: Open the Tool
 
-After uploading, you'll see a text field labeled **"Trigger Word"**.
+Go to: **https://idem307-image-metadata-generator.onrender.com/**
+
+**First time?** The page may take 20-30 seconds to load (the server "wakes up" from sleep). This only happens if nobody has used it recently.
+
+---
+
+### Step 3: Upload Your Images
+
+1. Click the **upload area** (or drag and drop images)
+2. Select 20-40 images from your folder
+3. Wait for upload to complete (~5-10 seconds)
+4. You'll see: **"✓ Uploaded X images"**
+
+**What happens:**
+- Images are validated (correct format, not corrupted)
+- Thumbnails are created for preview
+- Upload progress bar shows percentage
+
+---
+
+### Step 4: Enter Your Trigger Word
 
 **What is a trigger word?**
-A trigger word is a unique identifier that will be added to all your image descriptions. When you later use your fine-tuned AI model, you'll use this word in prompts to activate your custom training.
+A unique identifier for your dataset that will be used in every caption. When you later generate images on Replicate, you'll use this word in your prompts.
 
-**Rules for trigger words:**
-- ✅ Must be unique (not a common word like "dog" or "photo")
-- ✅ Use underscores instead of spaces: `my_studio` not `my studio`
-- ✅ Keep it memorable and descriptive: `ide_drawing_studio` or `zeke_portrait`
-- ✅ Avoid generic terms like `TOK` (conflicts with other models)
-- ✅ Can use capital letters for clarity: `IDE_STUDIO` or `ide_studio` both work
+**Examples:**
+- For IDE Main Hall: `ide_main_hall`
+- For a lecture room: `lh_room_b`
+- For a person named John: `john_smith`
+- For your design studio: `my_studio_space`
 
-**Examples of good trigger words:**
-- `ide_drawing_studio` (for an interior design studio)
-- `zeke_portrait` (for portraits of a person named Zeke)
-- `vintage_car_1965` (for a specific vintage car)
-- `my_product_v2` (for product photography)
+**Rules:**
+- ✅ Lowercase only
+- ✅ Use underscores instead of spaces
+- ✅ No special characters
+- ✅ Be specific and unique
 
-The tool will validate your trigger word in real-time and show a green checkmark when it's valid.
+**Type your trigger word** in the "Trigger Word" field.
 
----
-
-### Step 2.5: Enter API Key or Access Code (REQUIRED)
-
-The **"🔑 API Key (Required)"** section will be open by default. You must provide either an access code or your own API key.
-
-**How it works:**
-- **Have an access code?** Enter it in the password field (provided separately by the tool maintainer)
-- **Need your own API key?** Get a free Gemini API key from [Google AI Studio](https://aistudio.google.com/) and enter it here
-
-**Important:** This field is required. The tool uses the Google Gemini 2.5 Pro API, which requires authentication. You cannot generate captions without either an access code or your own API key.
+You'll see **"✓ Valid trigger word"** when it's correct.
 
 ---
 
-### Step 3: Generate Captions
+### Step 5: Enter Access Code
 
-1. Click the **"Generate Captions"** button
-2. Watch the progress bar update in real-time as each image is processed
-3. The debug console will show which image is being processed (e.g., "Processing 1/24")
+In the **"Gemini API Key or Access Code"** field:
 
-**How long does this take?**
-- Each image takes approximately **15-20 seconds** to process
-- For 24 images, expect **7-8 minutes** total
-- The AI is performing deep analysis for maximum quality, so the wait is worth it!
+**Option A - Use Instructor's Code:**
+- Enter the access code provided by your instructor
+- For IDEM307 students: `idem307_2025`
 
-**What's happening behind the scenes?**
-The Gemini 2.5 Pro AI model:
-1. Analyzes the visual content of each image
-2. Identifies subjects, objects, materials, and spatial relationships
-3. Determines photographic style, lighting, and mood
-4. Generates a single, detailed sentence describing everything
+**Option B - Use Your Own API Key:**
+- Get a free API key at: https://aistudio.google.com/
+- Sign in with Google account
+- Click "Get API Key" → "Create API Key"
+- Copy and paste into the field
 
 ---
 
-### Step 4: Review and Edit Captions
+### Step 6: Generate Captions
 
-Once generation is complete:
+1. Click **"Generate Captions"** button
+2. Watch the progress: **"Processing X of Y..."**
+3. Each image takes ~18 seconds to process
+4. Total time: ~10 minutes for 30 images
 
-1. The **Caption Editor** section appears automatically
-2. Use the ◀ **Previous** and **Next** ▶ buttons to navigate between images
-3. Each image shows:
-   - The image preview
-   - The AI-generated caption
-   - An editable text area where you can refine the description
+**What's happening:**
+- AI analyzes each image
+- Generates detailed description
+- Formats as: `photo of [trigger_word] [description]`
+- Saves caption for export
 
-**Why would you edit a caption?**
-- Fix any misidentified objects or details
-- Adjust emphasis on certain features
-- Correct style descriptions
-- Make the description more specific to your needs
-
-**Example of what you'll see:**
-
-For an image named `ide_drawing_studio - 1.jpeg`, the AI might generate:
-
-```
-photo of ide_drawing_studio A wide-angle shot of an empty architecture
-studio under a high, arched ceiling with exposed black steel trusses and
-large skylights that provide bright, diffuse overhead lighting, featuring
-neat rows of white-topped adjustable drafting tables with weathered metal
-bases and simple wooden stools on a dark grey floor, all set against a
-wall of translucent frosted glass panels in black frames, creating a
-functional, organized, and quietly industrious atmosphere
-```
-
-Notice how the description includes:
-- **Trigger word:** `ide_drawing_studio` (appears right after "photo of")
-- **Camera angle:** "wide-angle shot"
-- **Subject:** "empty architecture studio"
-- **Environment:** "high, arched ceiling with exposed black steel trusses"
-- **Lighting:** "bright, diffuse overhead lighting" from "large skylights"
-- **Details:** "white-topped adjustable drafting tables," "wooden stools," "dark grey floor"
-- **Materials:** "translucent frosted glass panels in black frames"
-- **Mood:** "functional, organized, and quietly industrious atmosphere"
-
-This level of detail helps AI models learn exactly what makes your subject unique.
+**☕ Take a break!** Come back in 10 minutes.
 
 ---
 
-### Step 5: Export Your Training Data
+### Step 7: Review Captions (Optional)
 
-Once you're satisfied with all captions:
+After generation completes:
 
-1. Click the **"Export Training Data"** button
-2. A ZIP file will download automatically (named `[your_trigger_word]_training.zip`)
-3. This ZIP file is ready to upload to Replicate.com or other training platforms
+1. Click on any thumbnail to see its caption
+2. Edit the caption if needed (click in text area)
+3. Changes save automatically
+4. Use arrow keys to navigate between images
 
-**What's inside the ZIP file?**
+**Most captions are good!** You typically only need to edit 10-20% of them.
 
-The ZIP contains:
-- ✅ All your original images (JPEG format)
-- ✅ Individual `.txt` files for each image with matching filenames
-
-**Example ZIP structure:**
-```
-ide_drawing_studio_training.zip
-├── ide_drawing_studio - 1.jpeg
-├── ide_drawing_studio - 1.txt
-├── ide_drawing_studio - 2.jpeg
-├── ide_drawing_studio - 2.txt
-├── ide_drawing_studio - 3.jpeg
-├── ide_drawing_studio - 3.txt
-└── ... (etc.)
-```
-
-**Why this format?**
-Replicate.com (and most AI training platforms) expect:
-- Each image paired with a text file of the same name
-- The text file contains the caption/description
-- All files at the root level of the ZIP (no subfolders)
+**When to edit:**
+- Caption is too generic
+- Missed important details
+- Incorrect description
+- You want to emphasize something specific
 
 ---
 
-## Using Your Training Data on Replicate.com
+### Step 8: Export Training ZIP
 
-### Quick Guide to Fine-Tuning FLUX
+1. Click **"Preview Metadata"** to see all captions (optional)
+2. Click **"Export Training Data"**
+3. Download the ZIP file
+4. File name: `[trigger_word]_training.zip`
 
-1. Go to https://replicate.com/replicate/fast-flux-trainer/train
-2. Upload your ZIP file to the **"input_images"** field
-3. Enter your **trigger word** in the **"trigger_word"** field
-4. Select **"subject"** for the **"lora_type"** (or "style" if training on artistic style)
-5. Leave **"training_steps"** at **1000**
-6. Click **"Create training"**
-
-**Cost:** Approximately **$1.50 USD** for ~2 minutes of training on 20-25 images
-
-Once training completes, you can generate new images using prompts like:
+**What's in the ZIP:**
 ```
-photo of ide_drawing_studio as a futuristic space station classroom,
-cyberpunk style, neon lighting
+ide_main_hall_training.zip
+├── image1.jpg
+├── image1.txt          ← Caption for image1
+├── image2.jpg
+├── image2.txt          ← Caption for image2
+└── ...
 ```
 
-The AI will generate images that maintain the architectural characteristics of your original studio while applying the new creative direction.
+Each image has a matching `.txt` file with its caption.
+
+---
+
+### Step 9: Upload to Replicate
+
+1. Go to: https://replicate.com/
+2. Sign in (create account if needed)
+3. Navigate to **FLUX LoRA training**
+4. Upload your ZIP file
+5. Start training!
+
+**Your trigger word in action:**
+When generating images, use prompts like:
+```
+photo of ide_main_hall with students working
+photo of ide_main_hall at sunset
+photo of ide_main_hall empty and quiet
+```
+
+The AI will generate images in the style of your training data!
 
 ---
 
 ## Troubleshooting
 
-### "Processing takes too long"
-- **Normal:** Gemini 2.5 Pro takes 15-20 seconds per image for maximum quality
-- **Expected time:** 7-8 minutes for 24 images
-- **Speed option:** Contact the developer to switch to Gemini 2.5 Flash (faster but slightly less detailed)
+### "Page won't load"
+**Solution**: First time may take 30 seconds (server waking up). Refresh and wait.
 
-### "Trigger word is invalid"
-- Make sure you're not using common words
-- Use underscores instead of spaces
-- Avoid special characters except underscores
-- Don't use `TOK` (reserved word)
+### "Upload seems stuck"
+**Solution**:
+- Hard refresh browser (Cmd+Shift+R or Ctrl+Shift+F5)
+- Check your internet connection
+- Try smaller batch (20 images instead of 40)
 
-### "Image upload failed"
-- Check that images are under 7MB each
-- Ensure you're using supported formats (JPG, PNG, WebP)
-- Try uploading fewer images at once if you have many large files
+### "API key or access code required"
+**Solution**:
+- Use access code: `idem307_2025` (for IDEM307 students)
+- Or get your own free API key: https://aistudio.google.com/
 
-### "Caption doesn't match my image"
-- Use the caption editor to manually correct any errors
-- The AI is very accurate but may occasionally misidentify details
-- Your manual edits will be preserved in the exported ZIP
+### "Trigger word invalid"
+**Solution**:
+- Use lowercase only
+- Use underscores, not spaces
+- Example: `my_space` not `My Space`
+
+### "Captions not generating"
+**Solution**:
+- Wait ~18 seconds per image (it's slow, but high quality!)
+- Check browser console (F12) for errors
+- Verify you entered trigger word first
+- Try refreshing and starting over
+
+### "Download doesn't work"
+**Solution**:
+- Check your browser's download folder
+- Try a different browser (Chrome, Firefox, Safari)
+- Disable ad blockers temporarily
 
 ---
 
-## Best Practices for Fine-Tuning
+## Tips for Best Results
 
 ### Image Selection
-- ✅ Use 10-25 high-quality images minimum
-- ✅ Include variety: different angles, lighting, times of day
-- ✅ Keep consistent subject: same space, person, or object
-- ✅ Use 1024×1024 or higher resolution
+✅ **Good**: Varied angles, lighting, compositions
+❌ **Bad**: All images look exactly the same
 
-### Trigger Word Strategy
-- ✅ Make it unique and memorable
-- ✅ Related to your subject: `my_studio`, `brand_logo`, `pet_name`
-- ✅ Short but descriptive: 2-3 words max
+✅ **Good**: Clear, high-quality images
+❌ **Bad**: Blurry, dark, low-resolution
 
-### Caption Quality
-- ✅ Let the AI generate detailed descriptions (don't oversimplify)
-- ✅ Review each caption to catch any errors
-- ✅ Keep descriptions factual and detailed
-- ✅ Don't remove important spatial or material details
+✅ **Good**: 30-40 images
+❌ **Bad**: Less than 20 images
 
----
+### Trigger Words
+✅ **Good**: `ide_main_hall`, `john_smith`, `studio_a`
+❌ **Bad**: `hall`, `person`, `room` (too generic)
 
-## Additional Use Cases
-
-While this tool is optimized for Replicate.com fine-tuning, you can also use it for:
-
-### 1. Image Dataset Documentation
-Generate detailed metadata for research or archival image collections
-
-### 2. Accessibility
-Create comprehensive alt-text descriptions for visually impaired users
-
-### 3. E-commerce
-Generate detailed product descriptions from product photos
-
-### 4. Content Management
-Auto-tag and describe images in large media libraries
-
-### 5. Training Data for Other Platforms
-Export format works with many AI training tools beyond Replicate
+### Caption Editing
+✅ **Edit**: Generic descriptions, obvious errors
+❌ **Don't edit everything**: AI does a good job!
 
 ---
 
-## Technical Details (For Advanced Users)
+## Example Caption Quality
 
-### AI Model
-- **Model:** Google Gemini 2.5 Pro
-- **Strengths:** Deep reasoning, nuanced analysis, complex scene understanding
-- **API:** `google-generativeai` Python library (version 0.8+)
+**Image**: Photo of an empty architecture studio with drafting tables
 
-### Caption Format
-All captions follow this structure:
+**AI-Generated Caption**:
 ```
-photo of [TRIGGER_WORD] [detailed single-sentence description including
-subject, environment, style, materials, spatial relationships, and mood]
+photo of ide_drawing_studio A bright and functional art studio workshop
+captured in a wide-angle shot, featuring a prominent arched barrel-vaulted
+ceiling with exposed dark metal trusses and large translucent skylights
+that cast even, diffused daylight across a dark grey linoleum floor, where
+a long row of high-top workbenches and chrome-based stools with wooden
+seats are arranged along a light wood-paneled wall
 ```
 
-### Processing Pipeline
-1. Image upload → Flask backend stores in temporary session folder
-2. Trigger word validation → Real-time API check
-3. Caption generation → Gemini API call per image with expert prompt
-4. MPO conversion → iPhone MPO format auto-converted to JPEG
-5. Export → ZIP creation with individual .txt files per image
-
-### Rate Limiting
-- 2-second delay between Gemini API calls (prevents throttling)
-- Exponential backoff on API failures (3 retry attempts)
+**Quality**: ✅ Detailed, specific, professional - perfect for training!
 
 ---
 
-## Support
+## FAQ
 
-For issues, questions, or feature requests:
-- Check the troubleshooting section above
-- Review server logs in the terminal/console
-- Report issues on the project's GitHub repository
+**Q: How long does it take?**
+A: ~10 minutes for 30 images (18 seconds per image)
 
----
+**Q: Can I use my phone photos?**
+A: Yes! Just make sure they're good quality and all the same subject.
 
-## Example Workflow Summary
+**Q: What if I don't like a caption?**
+A: Click the image thumbnail and edit the caption manually.
 
-**Goal:** Fine-tune FLUX to generate images of my architecture studio
+**Q: Can I process multiple datasets?**
+A: Yes! Just refresh the page and start over with new images.
 
-1. ✅ Photograph my studio from 20 different angles (1024×1024 JPEGs)
-2. ✅ Open Image Metadata Generator in browser
-3. ✅ Upload all 20 images
-4. ✅ Enter trigger word: `ide_drawing_studio`
-5. ✅ Click "Generate Captions" and wait ~6 minutes
-6. ✅ Review captions, edit 2-3 that need refinement
-7. ✅ Click "Export Training Data"
-8. ✅ Upload `ide_drawing_studio_training.zip` to Replicate
-9. ✅ Train FLUX model for ~2 minutes ($1.50)
-10. ✅ Generate new creative images: "photo of ide_drawing_studio as an underwater research lab"
+**Q: Is my data private?**
+A: Images are processed by Google's Gemini AI and deleted after you download the ZIP. They're not stored permanently.
 
-**Result:** A custom AI model that generates images maintaining my studio's architectural style while applying any creative scenario I imagine!
+**Q: Can I use this for commercial projects?**
+A: Yes! The tool is MIT licensed - free to use.
+
+**Q: What's the best trigger word?**
+A: Something unique and descriptive. If training on "IDE Main Hall", use `ide_main_hall` not just `hall`.
 
 ---
 
-*Last updated: October 2025*
+## Getting Help
+
+**For IDEM307 Students:**
+- Ask your instructor during class
+- Post in the course forum
+- Email: g.w.kortuem@tudelft.nl
+
+**Technical Issues:**
+- Check browser console (F12) for errors
+- Try different browser
+- Clear browser cache
+
+**GitHub Repository:**
+https://github.com/kortuem/idem307-image-metadata-generator
+
+---
+
+## What's Next?
+
+After downloading your training ZIP:
+
+1. **Upload to Replicate**: https://replicate.com/
+2. **Train your FLUX LoRA** (~20-30 minutes training time)
+3. **Generate images** using your trigger word
+4. **Experiment** with different prompts
+5. **Share** your results with the class!
+
+---
+
+**Good luck with your AI image generation project!** 🎨✨
+
+*Developed by Prof. Gerd Kortuem with Claude Code*
+*TU Delft - IDEM307 Generative AI and Design*
