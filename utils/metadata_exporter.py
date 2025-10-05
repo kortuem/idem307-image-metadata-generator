@@ -12,13 +12,13 @@ from io import BytesIO
 logger = logging.getLogger(__name__)
 
 
-def generate_metadata_txt(captions: Dict[str, str], trigger_word: str = "") -> str:
+def generate_metadata_txt(captions: Dict[str, str]) -> str:
     """
     Generate metadata.txt content from captions dictionary.
+    Captions are used as-is (no trigger word or "photo of" prefix added).
 
     Args:
         captions: Dictionary mapping filename -> caption
-        trigger_word: Optional trigger word (will be prepended if not already in caption)
 
     Returns:
         Formatted metadata.txt content (UTF-8, LF line endings)
@@ -30,16 +30,8 @@ def generate_metadata_txt(captions: Dict[str, str], trigger_word: str = "") -> s
     for filename in sorted_filenames:
         caption = captions[filename].strip()
 
-        # Ensure caption starts with "photo of" prefix
-        if not caption.startswith("photo of "):
-            if trigger_word and not caption.startswith(f"photo of {trigger_word}"):
-                caption = f"photo of {trigger_word} {caption}"
-            else:
-                caption = f"photo of {caption}"
-
-        # Remove trailing punctuation
-        if caption and caption[-1] in '.!?':
-            caption = caption[:-1]
+        # Remove trailing punctuation if present
+        caption = caption.rstrip('.!?,;:')
 
         lines.append(caption)
 
@@ -151,7 +143,7 @@ def create_training_zip(
 def create_training_zip_in_memory(
     image_paths: Dict[str, str],
     captions: Dict[str, str],
-    trigger_word: str
+    dataset_name: str = "dataset"
 ) -> Tuple[bool, BytesIO, str]:
     """
     Create a training zip file in memory (for web download).
@@ -159,7 +151,7 @@ def create_training_zip_in_memory(
     Args:
         image_paths: Dictionary mapping filename -> full_path
         captions: Dictionary mapping filename -> caption
-        trigger_word: Trigger word for naming
+        dataset_name: Name for the dataset (used in README)
 
     Returns:
         Tuple of (success: bool, zip_buffer: BytesIO, message: str)
@@ -172,9 +164,6 @@ def create_training_zip_in_memory(
             logger.error(error_msg)
             return (False, BytesIO(), error_msg)
 
-        # Generate metadata.txt content
-        metadata_content = generate_metadata_txt(captions, trigger_word)
-
         # Create zip in memory
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -186,18 +175,50 @@ def create_training_zip_in_memory(
                     logger.debug(f"Added to zip: {filename}")
 
                     # Add matching .txt file with caption
-                    # Get base filename without extension
                     base_name = os.path.splitext(filename)[0]
                     txt_filename = f"{base_name}.txt"
 
-                    # Get caption for this image
-                    caption = captions.get(filename, '')
+                    # Get caption for this image (no trigger word, no "photo of")
+                    caption = captions.get(filename, '').strip().rstrip('.!?,;:')
 
                     # Add .txt file with caption
                     zipf.writestr(txt_filename, caption.encode('utf-8'))
                     logger.debug(f"Added caption file: {txt_filename}")
                 else:
                     logger.warning(f"Image not found, skipping: {filename}")
+
+            # Add README.txt with instructions
+            from datetime import datetime
+            first_captions = list(captions.values())[:3]
+            readme_content = f"""# LoRA Training Dataset
+
+Generated: {datetime.now().strftime('%Y-%m-%d')}
+Tool: Image Metadata Generator v2.0
+Category: Interior/Architecture
+
+## Instructions for Replicate.com:
+
+1. Upload this zip to Replicate
+2. When prompted, enter your trigger word (e.g., "tudelft_interior", "myspace")
+3. Replicate will prepend your trigger to each caption during training
+
+## Caption Format:
+
+Captions start with space description, maximum 50 words.
+
+Examples from this dataset:
+{chr(10).join(f'- {cap.strip().rstrip(".!?,;:")}' for cap in first_captions[:3])}
+
+## After Training:
+
+Use your trigger word in prompts:
+"[your_trigger] spacious design studio with natural lighting"
+
+Example with trigger "tudelft_interior":
+"tudelft_interior spacious modern studio with large windows"
+"""
+            zipf.writestr('README.txt', readme_content.encode('utf-8'))
+            logger.debug("Added README.txt")
 
         # Get zip size
         zip_size = zip_buffer.tell()
@@ -217,19 +238,18 @@ def create_training_zip_in_memory(
         return (False, BytesIO(), error_msg)
 
 
-def preview_metadata_content(captions: Dict[str, str], trigger_word: str = "", max_lines: int = 10) -> str:
+def preview_metadata_content(captions: Dict[str, str], max_lines: int = 10) -> str:
     """
     Generate a preview of metadata.txt content.
 
     Args:
         captions: Dictionary mapping filename -> caption
-        trigger_word: Trigger word
         max_lines: Maximum lines to show in preview
 
     Returns:
         Preview string
     """
-    metadata_content = generate_metadata_txt(captions, trigger_word)
+    metadata_content = generate_metadata_txt(captions)
     lines = metadata_content.split('\n')
 
     if len(lines) <= max_lines:

@@ -16,53 +16,39 @@ logger = logging.getLogger(__name__)
 class GeminiCaptionGenerator:
     """Generates image captions using Google Gemini vision API."""
 
-    # Vision prompt template optimized for LoRA training dataset generation
-    # Based on best practices for text-to-image model fine-tuning metadata
-    VISION_PROMPT = """You are an expert image annotator for a leading text-to-image AI model. Your task is to analyze the provided image and generate a single, highly descriptive prompt that can be used to faithfully reproduce this image.
+    # Interior category prompt template for LoRA training
+    INTERIOR_PROMPT = """You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence, maximum 50 words, grounded only in visible evidence.
 
-The prompt must be a single, continuous sentence and should be structured using the following mandatory elements:
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
 
-**Subject**: The main object(s), space, or person(s) in the image.
+After "{SEMANTIC_CONTEXT}", add a natural connector word (with, featuring, showing) and describe in order:
+1. Key architectural elements and spatial layout
+2. Furniture, objects, and their arrangement
+3. Materials, finishes, and colors
+4. Lighting conditions and quality
+5. Overall atmosphere or character
 
-**Environment/Location**: The setting (e.g., in a modern office, a minimalist lecture hall, an industrial workspace).
+Aim for 40-50 words to provide rich, specific detail.
 
-**Style & Composition**: Specify photographic style (e.g., photorealistic, architectural photography, wide-angle shot, 50mm lens, natural light, golden hour, high-key lighting).
+Example:
+"{SEMANTIC_CONTEXT} with high vaulted ceilings and exposed beams, rows of modern workstations with ergonomic chairs arranged in open layout, polished concrete floors, floor-to-ceiling windows providing abundant natural light, creating bright collaborative atmosphere"
 
-**Key Details**: Materials, colors, textures, and critical elements (e.g., polished concrete floor, exposed brick walls, ergonomic mesh chairs, floor-to-ceiling windows, soft diffused lighting from skylights).
+Critical rules:
+- Start EXACTLY with: {SEMANTIC_CONTEXT}
+- No "photo of" or "image of"
+- Maximum 50 words, aim for 40-50
+- Single sentence only
+- Output only the sentence"""
 
-**Spatial Relationships**: How elements relate to each other (e.g., rows of desks facing a projection screen, spiral staircase connecting two floors, open-plan layout with glass partitions).
-
-**Mood/Atmosphere**: The overall feeling (e.g., minimalist and serene, busy and collaborative, moody and intimate, bright and energetic).
-
-**For Person Images, Focus On**:
-- Pose/action, clothing style, expression
-- Lighting quality and direction
-- Background environment and depth
-- Physical appearance and context
-
-**Example outputs**:
-
-Space: "A spacious industrial-style design studio with exposed concrete ceiling beams and polished concrete floors, featuring rows of black drafting tables with adjustable LED task lamps, floor-to-ceiling windows providing soft natural daylight, surrounded by white acoustic wall panels and cork pinboards displaying sketches, creating a minimalist yet creative atmosphere with high ceilings and open-plan layout"
-
-Person: "A confident professional standing in relaxed pose wearing casual dark jeans and charcoal crew-neck sweater, calm and approachable expression, illuminated by soft window light from camera left creating subtle shadow definition, against a neutral medium-grey seamless backdrop with shallow depth of field"
-
-**Critical Instructions**:
-- Output ONLY the complete, single-sentence descriptive prompt
-- Do NOT include any introductory text, explanations, or the word "photo" or "image"
-- Do NOT include the trigger word prefix - that will be added automatically
-- Be extremely specific about materials, lighting, spatial layout, and atmosphere
-- Use professional photographic and architectural terminology where appropriate"""
-
-    def __init__(self, api_key: Optional[str] = None, trigger_word: str = ""):
+    def __init__(self, api_key: Optional[str] = None):
         """
         Initialize the caption generator.
 
         Args:
             api_key: Gemini API key (defaults to GEMINI_API_KEY env var)
-            trigger_word: Trigger word to prepend to captions
         """
         self.api_key = api_key or os.getenv('GEMINI_API_KEY')
-        self.trigger_word = trigger_word
         self.last_request_time = 0
         self.rate_limit_delay = 2.0  # Seconds between requests
 
@@ -131,17 +117,66 @@ Person: "A confident professional standing in relaxed pose wearing casual dark j
                 logger.warning(f"Attempt {attempt + 1}/{max_retries} failed: {e}. Retrying in {backoff_time}s...")
                 time.sleep(backoff_time)
 
-    def generate_caption(self, image_path: str) -> Tuple[bool, str, Optional[str]]:
+    def _validate_caption(self, caption: str, semantic_context: str) -> Tuple[bool, str, list]:
+        """
+        Validate and clean generated caption.
+
+        Args:
+            caption: Generated caption from AI
+            semantic_context: Required context that must be in caption
+
+        Returns:
+            Tuple of (is_valid: bool, cleaned_caption: str, issues: list)
+        """
+        issues = []
+
+        # 1. Strip whitespace
+        caption = caption.strip()
+
+        # 2. Remove banned prefixes
+        banned_prefixes = ['photo of', 'image of', 'picture of', 'a photo', 'an image']
+        for prefix in banned_prefixes:
+            if caption.lower().startswith(prefix):
+                caption = caption[len(prefix):].strip()
+                issues.append(f"Removed '{prefix}' prefix")
+
+        # 3. Check starts with context (CRITICAL)
+        if not caption.startswith(semantic_context):
+            issues.append(f"CRITICAL: Doesn't start with '{semantic_context}'")
+            return (False, caption, issues)
+
+        # 4. Check word count (CRITICAL)
+        word_count = len(caption.split())
+        if word_count > 50:
+            issues.append(f"CRITICAL: {word_count} words (max 50)")
+            return (False, caption, issues)
+
+        # 5. Check for multiple sentences
+        if '. ' in caption or '! ' in caption or '? ' in caption:
+            caption = caption.split('. ')[0]
+            issues.append("Multiple sentences - kept first")
+
+        # 6. Remove trailing punctuation
+        original = caption
+        caption = caption.rstrip('.!?,;:')
+        if caption != original:
+            issues.append("Removed trailing punctuation")
+
+        # Success - no critical issues
+        return (True, caption, issues)
+
+    def generate_caption(self, image_path: str, semantic_context: str) -> Tuple[bool, str, Optional[str]]:
         """
         Generate a caption for an image.
 
         Args:
             image_path: Path to the image file
+            semantic_context: User-provided context (e.g., "TU Delft drawing studio")
 
         Returns:
             Tuple of (success: bool, caption: str, error: Optional[str])
             - success: True if caption generated successfully
-            - caption: The formatted caption (with trigger word prefix)
+            - caption: The formatted caption starting with semantic context
             - error: Error message if failed, None if successful
         """
         try:
@@ -165,28 +200,74 @@ Person: "A confident professional standing in relaxed pose wearing casual dark j
                 image_path = temp_path
                 image = Image.open(image_path)
 
+            # Inject semantic context into prompt
+            prompt = self.INTERIOR_PROMPT.replace("{SEMANTIC_CONTEXT}", semantic_context)
+
             # Generate caption with retry logic
             def api_call():
-                response = self.model.generate_content([self.VISION_PROMPT, image])
+                response = self.model.generate_content([prompt, image])
                 return response.text
 
-            description = self._retry_with_backoff(api_call)
+            caption = self._retry_with_backoff(api_call)
 
-            # Clean and format caption
-            description = description.strip()
+            # Validate and clean caption
+            is_valid, cleaned_caption, issues = self._validate_caption(caption, semantic_context)
 
-            # Remove trailing punctuation
-            if description and description[-1] in '.!?':
-                description = description[:-1]
+            if not is_valid:
+                # Critical issue - try to regenerate once
+                logger.warning(f"Caption validation failed: {issues}. Attempting regeneration...")
 
-            # Format final caption
-            if self.trigger_word:
-                caption = f"photo of {self.trigger_word} {description}"
-            else:
-                caption = f"photo of {description}"
+                # Determine regeneration prompt based on issue
+                if "Doesn't start with" in str(issues):
+                    regen_prompt = f"""Your previous caption didn't start with "{semantic_context}" as required.
 
-            logger.info(f"Generated caption for {os.path.basename(image_path)}")
-            return (True, caption, None)
+Previous caption: {caption}
+
+Generate a NEW caption that begins EXACTLY with: "{semantic_context}"
+Then add connector word and description. Maximum 50 words, aim for 40-50. Output only the sentence."""
+
+                elif "words (max 50)" in str(issues):
+                    word_count = len(caption.split())
+                    regen_prompt = f"""Your previous caption was {word_count} words, but maximum is 50.
+
+Previous caption: {caption}
+
+Condense to maximum 50 words. Keep key facts. Start with "{semantic_context}". Aim for 40-50 words. Output only the sentence."""
+
+                else:
+                    regen_prompt = f"""Your previous caption had issues: {', '.join(issues)}
+
+Previous caption: {caption}
+
+Generate a NEW caption starting with "{semantic_context}", maximum 50 words. Output only the sentence."""
+
+                # Try regeneration
+                try:
+                    def regen_call():
+                        response = self.model.generate_content([regen_prompt, image])
+                        return response.text
+
+                    regenerated_caption = self._retry_with_backoff(regen_call)
+
+                    # Validate regenerated caption
+                    is_valid_regen, cleaned_regen, issues_regen = self._validate_caption(regenerated_caption, semantic_context)
+
+                    if is_valid_regen:
+                        logger.info(f"Regeneration successful: {cleaned_regen[:60]}...")
+                        return (True, cleaned_regen, None)
+                    else:
+                        logger.error(f"Regeneration still failed: {issues_regen}")
+                        return (False, cleaned_regen, f"Regeneration failed: {', '.join(issues_regen)}")
+
+                except Exception as e:
+                    logger.error(f"Regeneration error: {e}")
+                    return (False, cleaned_caption, f"Validation failed and regeneration error: {str(e)}")
+
+            logger.info(f"Generated caption for {os.path.basename(image_path)}: {cleaned_caption[:60]}...")
+            if issues:
+                logger.info(f"Auto-fixes applied: {', '.join(issues)}")
+
+            return (True, cleaned_caption, None)
 
         except FileNotFoundError:
             error = f"Image file not found: {image_path}"
@@ -198,24 +279,19 @@ Person: "A confident professional standing in relaxed pose wearing casual dark j
             logger.error(error)
             return (False, "", error)
 
-    def set_trigger_word(self, trigger_word: str):
-        """Update the trigger word for caption formatting."""
-        self.trigger_word = trigger_word
-        logger.info(f"Trigger word updated to: {trigger_word}")
-
 
 # Convenience function for single-caption generation
-def generate_single_caption(image_path: str, trigger_word: str, api_key: Optional[str] = None) -> Tuple[bool, str, Optional[str]]:
+def generate_single_caption(image_path: str, semantic_context: str, api_key: Optional[str] = None) -> Tuple[bool, str, Optional[str]]:
     """
     Generate a single caption (convenience function).
 
     Args:
         image_path: Path to image file
-        trigger_word: Trigger word to prepend
+        semantic_context: Context description (e.g., "TU Delft drawing studio")
         api_key: Optional API key (defaults to env var)
 
     Returns:
         Tuple of (success, caption, error)
     """
-    generator = GeminiCaptionGenerator(api_key=api_key, trigger_word=trigger_word)
-    return generator.generate_caption(image_path)
+    generator = GeminiCaptionGenerator(api_key=api_key)
+    return generator.generate_caption(image_path, semantic_context)

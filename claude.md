@@ -7,36 +7,42 @@
 
 ## Project Status
 
-**Status**: ✅ **PRODUCTION v1.0** - Deployed and in active use
-**Live App**: https://idem307-image-metadata-generator.onrender.com/
+**Status**: 🚧 **UPGRADING to v2.0** - Interior category MVP
+**Live App**: https://idem307-image-metadata-generator.onrender.com/ (v1.0)
 **Repository**: https://github.com/kortuem/idem307-image-metadata-generator
 
 **Purpose**: Flask web app for generating AI-powered image captions for LoRA training datasets. Built for TU Delft IDEM307 workshop students.
 
 ---
 
-## Critical Rules (DO NOT BREAK)
+## Critical Rules (v2.0 - DO NOT BREAK)
 
-### 1. Caption Format (CRITICAL)
+### 1. Caption Format (UPDATED)
 
-**Required Replicate.com format**:
+**New format** (Replicate adds trigger word during training):
 ```
-photo of [trigger_word] [description]
+{SEMANTIC_CONTEXT} {connector} {description}
+```
+
+**Example**:
+```
+TU Delft drawing studio with high barrel-vaulted skylights providing bright diffused natural light, multiple rows of white-topped drafting tables on dark flooring, frosted glass partitions, creating functional educational workspace
 ```
 
 **Rules**:
-- Literal "photo of " (lowercase, with space after)
-- Then trigger_word (e.g., `ide_main_hall`)
-- Space before description
-- No trailing punctuation
+- MUST start with semantic context (exact match)
+- Max 50 words, aim for 40-50 for detail
+- NO "photo of" prefix (not needed)
+- NO trigger word in caption (Replicate adds it)
+- Single sentence, no trailing punctuation
 
 **Never Accept**:
-- ❌ `A photo of trigger_word...` (capital A)
-- ❌ `Photo of trigger_word...` (capital P)
-- ❌ `photo of trigger_word: description` (colon)
-- ❌ `trigger_word description` (missing "photo of")
+- ❌ `photo of TU Delft...` (no "photo of")
+- ❌ `ide_interior TU Delft...` (no trigger word)
+- ❌ Captions >50 words (too long)
+- ❌ Multiple sentences
 
-### 2. Export Format (CRITICAL)
+### 2. Export Format (UNCHANGED)
 
 **Replicate requires**: Individual .txt file per image
 ```
@@ -152,16 +158,51 @@ trigger_word_training.zip
 
 ---
 
-## Project Documentation
+## Development Approach (v2.0)
 
-For detailed technical information, see:
+### Documentation Strategy
+- **ONE specification**: [SPECIFICATION.md](SPECIFICATION.md) - Single source of truth
+- **Archive analysis docs**: Move exploration docs to `docs/archive/`
+- **Avoid creating**: Temporary documents, multiple specs, redundant files
+- **Keep minimal**: Only essential documentation
 
-- **[README.md](README.md)** - Project overview and quick start
-- **[TUTORIAL.md](TUTORIAL.md)** - Step-by-step student guide
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Technical architecture
-- **[docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md)** - Deployment guide
-- **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Developer workflow
+### Testing Approach
+- **Phase 1**: Interior category only (MVP)
+- **Test with real images**: 5 TU Delft interior photos
+- **Manual testing first**: Verify captions work before automating
+- **Iterate**: Get Interior perfect before adding other categories
+
+### Implementation Strategy
+1. **Start simple**: Interior category only
+2. **Test early**: Don't wait until complete
+3. **One thing at a time**: Perfect one feature before next
+4. **No premature optimization**: Make it work, then make it better
+
+### When Developing
+✅ **Do**:
+- Focus on ONE category (Interior) first
+- Test with real images frequently
+- Keep specification updated in ONE place
+- Archive exploration/analysis docs
+
+❌ **Don't**:
+- Create multiple specification documents
+- Add all categories at once
+- Write extensive docs before testing
+- Keep temporary analysis files in root
 
 ---
 
-**Last Updated**: October 2025 (v1.0)
+## Project Documentation
+
+**Active**:
+- **[SPECIFICATION.md](SPECIFICATION.md)** - Technical spec (v2.0)
+- **[README.md](README.md)** - Project overview
+- **[CLAUDE.md](CLAUDE.md)** - This file (AI instructions)
+
+**Archive** (reference only):
+- `docs/archive/` - Old specs, analysis, exploration docs
+
+---
+
+**Last Updated**: October 2025 (v2.0 in progress)

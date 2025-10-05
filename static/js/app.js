@@ -3,7 +3,7 @@
 // State Management
 const state = {
     sessionId: null,
-    triggerWord: '',
+    semanticContext: '',  // v2.0: User-provided context (e.g., "TU Delft drawing studio")
     images: [],
     captions: {},
     currentImageIndex: 0,
@@ -75,10 +75,10 @@ function initializeEventListeners() {
     // Clear upload
     document.getElementById('clear-upload').addEventListener('click', clearUpload);
 
-    // Trigger word validation
-    const triggerInput = document.getElementById('trigger-word');
-    triggerInput.addEventListener('input', validateTriggerWord);
-    triggerInput.addEventListener('blur', validateTriggerWord);
+    // Semantic context validation
+    const contextInput = document.getElementById('semantic-context');
+    contextInput.addEventListener('input', validateSemanticContext);
+    contextInput.addEventListener('blur', validateSemanticContext);
 
     // Generate captions
     document.getElementById('generate-btn').addEventListener('click', generateCaptions);
@@ -259,19 +259,19 @@ async function handleFileUpload(event) {
             // Show gallery
             renderImageGrid();
 
-            // Enable trigger word input if disabled
-            document.getElementById('trigger-word').disabled = false;
+            // Enable semantic context input if disabled
+            document.getElementById('semantic-context').disabled = false;
 
             // Reset UI sections - hide editor and export until new captions are generated
             document.getElementById('editor-section').style.display = 'none';
             document.getElementById('export-section').style.display = 'none';
             document.getElementById('progress-section').style.display = 'none';
 
-            // Reset trigger word
-            document.getElementById('trigger-word').value = '';
-            state.triggerWord = '';
+            // Reset semantic context
+            document.getElementById('semantic-context').value = '';
+            state.semanticContext = '';
 
-            // Disable generate button until trigger word is entered
+            // Disable generate button until semantic context is entered
             document.getElementById('generate-btn').disabled = true;
         } else {
             log(DEBUG.ERROR, `Upload failed: ${data.error}`);
@@ -295,14 +295,14 @@ function clearUpload() {
     log(DEBUG.INFO, 'Upload cleared');
 }
 
-// Trigger Word Validation
-async function validateTriggerWord() {
-    const input = document.getElementById('trigger-word');
-    const triggerWord = input.value.trim();
-    const validationDiv = document.getElementById('trigger-validation');
+// Semantic Context Validation (v2.0)
+async function validateSemanticContext() {
+    const input = document.getElementById('semantic-context');
+    const semanticContext = input.value.trim();
+    const validationDiv = document.getElementById('context-validation');
     const generateBtn = document.getElementById('generate-btn');
 
-    if (!triggerWord) {
+    if (!semanticContext) {
         input.classList.remove('valid', 'invalid');
         validationDiv.textContent = '';
         validationDiv.className = 'validation-message';
@@ -311,10 +311,10 @@ async function validateTriggerWord() {
     }
 
     try {
-        const response = await fetch('/api/validate-trigger-word', {
+        const response = await fetch('/api/validate-semantic-context', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ trigger_word: triggerWord })
+            body: JSON.stringify({ semantic_context: semanticContext })
         });
 
         const data = await response.json();
@@ -322,21 +322,21 @@ async function validateTriggerWord() {
         if (data.valid) {
             input.classList.add('valid');
             input.classList.remove('invalid');
-            validationDiv.textContent = '✓ Valid trigger word';
+            validationDiv.textContent = '✓ Valid context';
             validationDiv.className = 'validation-message success';
 
-            state.triggerWord = triggerWord;
+            state.semanticContext = semanticContext;
             generateBtn.disabled = state.images.length === 0;
 
-            log(DEBUG.SUCCESS, `Trigger word validated: ${triggerWord}`);
+            log(DEBUG.SUCCESS, `Semantic context validated: ${semanticContext}`);
         } else {
             input.classList.add('invalid');
             input.classList.remove('valid');
             validationDiv.textContent = `✗ ${data.error}`;
             validationDiv.className = 'validation-message error';
 
-            if (data.suggestion) {
-                validationDiv.textContent += ` (Try: ${data.suggestion})`;
+            if (data.examples) {
+                validationDiv.textContent += ` (Examples: ${data.examples.slice(0, 2).join(', ')})`;
             }
 
             generateBtn.disabled = true;
@@ -346,10 +346,10 @@ async function validateTriggerWord() {
     }
 }
 
-// Generate Captions (one image at a time for real-time progress)
+// Generate Captions (one image at a time for real-time progress) - v2.0
 async function generateCaptions() {
-    if (!state.sessionId || !state.triggerWord) {
-        log(DEBUG.ERROR, 'Missing session ID or trigger word');
+    if (!state.sessionId || !state.semanticContext) {
+        log(DEBUG.ERROR, 'Missing session ID or semantic context');
         return;
     }
 
@@ -366,8 +366,16 @@ async function generateCaptions() {
 
     log(DEBUG.INFO, `Starting caption generation for ${totalImages} images...`);
 
-    // Get optional API key from user input
+    // Get required API key from user input
     const userApiKey = document.getElementById('api-key').value.trim();
+
+    if (!userApiKey) {
+        log(DEBUG.ERROR, 'API key is required');
+        alert('Please enter your Gemini API key or access code');
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Captions';
+        return;
+    }
 
     // Process each image individually for real-time updates
     for (const imageFile of state.images) {
@@ -382,13 +390,9 @@ async function generateCaptions() {
             const requestBody = {
                 session_id: state.sessionId,
                 filename: filename,
-                trigger_word: state.triggerWord
+                semantic_context: state.semanticContext,
+                api_key: userApiKey
             };
-
-            // Include API key if user provided one
-            if (userApiKey) {
-                requestBody.api_key = userApiKey;
-            }
 
             const response = await fetch('/api/generate-single', {
                 method: 'POST',
@@ -633,11 +637,17 @@ async function exportZip() {
     log(DEBUG.INFO, 'Exporting training zip...');
 
     try {
+        // Generate dataset name from semantic context
+        const datasetName = state.semanticContext
+            ? state.semanticContext.toLowerCase().replace(/\s+/g, '_')
+            : 'dataset';
+
         const response = await fetch('/api/export', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                session_id: state.sessionId
+                session_id: state.sessionId,
+                dataset_name: datasetName
             })
         });
 
@@ -646,13 +656,13 @@ async function exportZip() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${state.triggerWord}_training.zip`;
+            a.download = `${datasetName}_training.zip`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            log(DEBUG.SUCCESS, `Exported ${state.triggerWord}_training.zip`);
+            log(DEBUG.SUCCESS, `Exported ${datasetName}_training.zip`);
         } else {
             const data = await response.json();
             log(DEBUG.ERROR, `Export failed: ${data.error}`);

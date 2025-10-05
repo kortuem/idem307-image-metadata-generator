@@ -1,0 +1,572 @@
+# Final Caption Format Strategy
+
+**Date**: 2025-10-05
+**Status**: ✅ CLARIFIED - Clean, simple approach
+
+---
+
+## The Rules (from Replicate)
+
+### What Replicate Requires:
+1. ✅ **Individual .txt file per image** (we already do this correctly)
+2. ❌ **NO "photo of" or "image of" prefix** (Replicate/user handles this)
+3. ❌ **NO trigger word in captions** (Replicate adds during training)
+4. ✅ **One clear, complete descriptive sentence**
+
+---
+
+## Our Caption Format
+
+### Simple Structure:
+```
+{SEMANTIC_CONTEXT} {description}
+```
+
+**That's it!** One sentence, 30-50 words, starting with user's semantic context.
+
+### Examples:
+
+**Interior**:
+```
+TU Delft drawing studio with barrel-vaulted skylights, rows of white drafting tables and wooden stools on dark flooring, frosted glass partitions along one side, bright diffuse daylight creating functional atmosphere
+```
+
+**Portrait**:
+```
+TU Delft volunteer portrait showing person in relaxed standing pose wearing light sweater, soft window light from left creating gentle shadows, neutral corridor backdrop, calm informal atmosphere
+```
+
+**Object**:
+```
+TU Delft prototype chair with curved wooden backrest and slender metal legs, matte finish, positioned beside white desk in minimal studio setting, even overhead lighting highlighting clean joinery details
+```
+
+**Outdoor**:
+```
+TU Delft campus courtyard with broad paved plaza, benches and low plantings, modern glass facades framing the space, cyclists in distance, overcast daylight producing soft contrast
+```
+
+---
+
+## What User Provides
+
+### Single Input Field: "Semantic Context"
+
+**Label**: "Describe the subject/context"
+
+**Placeholder**: `e.g., "TU Delft drawing studio", "TU Delft volunteer portrait", "TU Delft campus courtyard"`
+
+**Instructions**:
+> Provide a brief description of what this is (location, person, object). This will be the start of each caption. The AI will add visual details.
+
+**Examples by Category**:
+- Interior: `TU Delft drawing studio`, `TU Delft lecture hall`, `Hospital emergency room`
+- Portrait: `TU Delft volunteer portrait`, `Medical professional headshot`, `Student ID photo`
+- Object: `TU Delft prototype chair`, `Vintage camera collection item`, `Handmade ceramic vase`
+- Outdoor: `TU Delft campus courtyard`, `Urban park pathway`, `Residential street view`
+
+---
+
+## How AI Integration Works
+
+### Step-by-Step Process:
+
+**1. User Inputs:**
+- Uploads images
+- Selects category: `interior`
+- Enters semantic context: `TU Delft drawing studio`
+
+**2. AI Prompt (injected):**
+```
+You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence of 30–50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "TU Delft drawing studio"
+
+Then continue with "with" or another natural connector and describe visual features:
+- Key objects and spatial layout
+- Materials and finishes
+- Lighting conditions
+- Atmosphere
+
+Example output:
+"TU Delft drawing studio with barrel-vaulted skylights providing bright diffused light, rows of white-topped drafting tables and wooden stools on dark flooring, frosted glass partitions creating open workspace"
+
+Rules:
+- Start with exactly: "TU Delft drawing studio"
+- Continue naturally (use "with", "featuring", "showing", etc.)
+- 30-50 words total
+- Describe only what's visible
+- No "photo of" or "image of"
+- Output only the sentence
+```
+
+**3. AI Generates:**
+```
+TU Delft drawing studio with barrel-vaulted skylights providing bright diffused light, rows of white drafting tables and wooden stools on dark flooring, frosted glass partitions along one wall creating functional educational workspace
+```
+
+**4. Validation:**
+- ✅ Starts with semantic context? → Yes
+- ✅ 30-50 words? → 35 words ✅
+- ✅ No "photo of"? → Yes
+- → **PASS** ✅
+
+**5. Written to .txt file:**
+```
+# image001.txt
+TU Delft drawing studio with barrel-vaulted skylights providing bright diffused light, rows of white drafting tables and wooden stools on dark flooring, frosted glass partitions along one wall creating functional educational workspace
+```
+
+**6. User uploads to Replicate:**
+- Replicate asks: "What's your trigger word?"
+- User enters: `tudelft_interior`
+- Replicate uses: `tudelft_interior TU Delft drawing studio with barrel-vaulted skylights...`
+
+---
+
+## UI Changes
+
+### Remove:
+- ❌ **Trigger word input field** (not needed for captions)
+- ❌ **"photo of" in any display**
+
+### Keep/Add:
+- ✅ **Semantic context input** (critical for caption quality)
+- ✅ **Category dropdown** (interior|portrait|object|outdoor)
+- ✅ **Optional tags** (for prompt enhancement)
+- ✅ **Word count indicator** (30-50 validation)
+
+### New Zip Export:
+```
+dataset_training.zip    ← Generic name or user-provided
+├── image001.jpg
+├── image001.txt        ← "TU Delft drawing studio with..."
+├── image002.jpg
+├── image002.txt        ← "TU Delft lecture hall featuring..."
+└── README.txt          ← Instructions for Replicate
+```
+
+**README.txt content**:
+```
+# LoRA Training Dataset
+
+Generated by Image Metadata Generator
+TU Delft IDEM307 Workshop
+
+## Instructions for Replicate.com:
+
+1. Upload this zip file to Replicate
+2. When prompted, choose your trigger word (e.g., "tudelft_interior", "myschool", etc.)
+3. Replicate will automatically add your trigger word to each caption during training
+
+## Caption Format:
+
+All captions start with semantic context and describe visual features.
+
+Examples:
+- TU Delft drawing studio with barrel-vaulted skylights, rows of white drafting tables...
+- TU Delft lecture hall featuring tiered seating, large projection screen...
+- TU Delft campus courtyard with broad paved plaza, benches and plantings...
+
+## After Training:
+
+Use your trigger word in prompts:
+"[trigger_word] spacious design studio with natural lighting"
+
+Example:
+"tudelft_interior spacious design studio with natural lighting and modern furniture"
+```
+
+---
+
+## Updated Prompts (No "photo of")
+
+### Interior Template:
+```
+You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence of 30–50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
+
+Continue naturally describing: key objects/layout → materials/finishes → lighting → atmosphere
+
+Use connectors like "with", "featuring", "showing" after the context.
+
+Example:
+"{SEMANTIC_CONTEXT} with [objects/layout], [materials], [lighting], creating [atmosphere]"
+
+Rules:
+- Start exactly with: {SEMANTIC_CONTEXT}
+- No "photo of" or "image of"
+- 30-50 words total
+- Only visible features
+- Output only the sentence
+```
+
+### Portrait Template:
+```
+You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence of 30–50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
+
+Continue describing: pose/gesture → clothing → lighting → background → atmosphere
+
+Example:
+"{SEMANTIC_CONTEXT} showing [pose/gesture], wearing [clothing], [lighting], [background], [atmosphere]"
+
+Rules:
+- Start exactly with: {SEMANTIC_CONTEXT}
+- Keep descriptions neutral, non-sensitive
+- No "photo of" or "image of"
+- 30-50 words total
+- Output only the sentence
+```
+
+### Object Template:
+```
+You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence of 30–50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
+
+Continue describing: form/geometry → materials/finish → scale/setting → lighting → distinctive features
+
+Example:
+"{SEMANTIC_CONTEXT} with [form], [materials], [setting], [lighting], showing [features]"
+
+Rules:
+- Start exactly with: {SEMANTIC_CONTEXT}
+- No "photo of" or "image of"
+- 30-50 words total
+- Output only the sentence
+```
+
+### Outdoor Template:
+```
+You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence of 30–50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
+
+Continue describing: scene type → structures/vegetation → spatial layout → weather/lighting → activity
+
+Example:
+"{SEMANTIC_CONTEXT} with [scene elements], [structures], [layout], [lighting/weather], [activity level]"
+
+Rules:
+- Start exactly with: {SEMANTIC_CONTEXT}
+- No "photo of" or "image of"
+- 30-50 words total
+- Output only the sentence
+```
+
+---
+
+## Code Implementation
+
+### caption_generator.py (simplified):
+
+```python
+class GeminiCaptionGenerator:
+    """Generates captions WITHOUT trigger words or 'photo of' prefix."""
+
+    CATEGORY_TEMPLATES = {
+        'interior': """You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence of 30–50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
+
+Continue naturally describing: key objects/layout → materials/finishes → lighting → atmosphere
+Use connectors like "with", "featuring", "showing" after the context.
+
+Example: "{SEMANTIC_CONTEXT} with barrel-vaulted skylights providing bright light, rows of white drafting tables on dark flooring, creating functional workspace"
+
+Rules:
+- Start exactly with: {SEMANTIC_CONTEXT}
+- No "photo of" or "image of"
+- 30-50 words total
+- Only visible features
+- Output only the sentence""",
+        # ... other templates
+    }
+
+    def __init__(self, api_key: Optional[str] = None):
+        """Initialize without trigger_word (not needed anymore)."""
+        self.api_key = api_key or os.getenv('GEMINI_API_KEY')
+        # ... rest of init
+
+    def generate_caption(
+        self,
+        image_path: str,
+        semantic_context: str,
+        category: str = 'interior'
+    ) -> Tuple[bool, str, Optional[str]]:
+        """
+        Generate caption with semantic context integration.
+
+        Returns caption like: "TU Delft drawing studio with barrel-vaulted skylights..."
+        NO "photo of" prefix, NO trigger word.
+        """
+
+        # 1. Get template for category
+        template = self.CATEGORY_TEMPLATES.get(category, self.CATEGORY_TEMPLATES['interior'])
+
+        # 2. Inject semantic context
+        prompt = template.replace('{SEMANTIC_CONTEXT}', semantic_context)
+
+        # 3. Generate
+        image = Image.open(image_path)
+        response = self.model.generate_content([prompt, image])
+        caption = response.text.strip()
+
+        # 4. Validate: must start with semantic context
+        if not caption.lower().startswith(semantic_context.lower()):
+            # Fallback: prepend it
+            caption = f"{semantic_context} with {caption}"
+            logger.warning(f"AI didn't start with context, prepended")
+
+        # 5. Remove any accidental "photo of" prefix
+        caption = caption.replace('photo of ', '').replace('Photo of ', '').replace('image of ', '')
+
+        # 6. Validate word count (30-50)
+        word_count = len(caption.split())
+        if not 30 <= word_count <= 50:
+            # Regenerate with strict length instruction
+            caption = self._regenerate_with_length_constraint(image, semantic_context, category)
+
+        # 7. Remove trailing punctuation
+        if caption and caption[-1] in '.!?':
+            caption = caption[:-1]
+
+        return (True, caption, None)
+```
+
+### metadata_exporter.py (simplified):
+
+```python
+def generate_metadata_txt(captions: Dict[str, str]) -> str:
+    """
+    Generate metadata.txt content (no trigger word, no "photo of").
+
+    Just the captions, one per line.
+    """
+    sorted_filenames = sorted(captions.keys(), key=lambda x: x.lower())
+
+    lines = []
+    for filename in sorted_filenames:
+        caption = captions[filename].strip()
+
+        # Remove trailing punctuation
+        if caption and caption[-1] in '.!?':
+            caption = caption[:-1]
+
+        lines.append(caption)
+
+    return '\n'.join(lines)
+
+
+def create_training_zip_in_memory(
+    image_paths: Dict[str, str],
+    captions: Dict[str, str],
+    dataset_name: str = "dataset"  # Changed from trigger_word
+) -> Tuple[bool, BytesIO, str]:
+    """Create training zip with README instructions."""
+
+    # ... existing validation ...
+
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        # Add images and .txt files
+        for filename, image_path in image_paths.items():
+            # Add image
+            zipf.write(image_path, arcname=filename)
+
+            # Add .txt with caption (no trigger, no "photo of")
+            base_name = os.path.splitext(filename)[0]
+            txt_filename = f"{base_name}.txt"
+            caption = captions.get(filename, '')
+            zipf.writestr(txt_filename, caption.encode('utf-8'))
+
+        # Add README
+        readme = f"""# LoRA Training Dataset
+
+Generated: {datetime.now().strftime('%Y-%m-%d')}
+
+## Instructions for Replicate.com:
+
+1. Upload this zip to Replicate
+2. Choose your trigger word when prompted (e.g., "tudelft_interior", "myschool")
+3. Replicate adds your trigger word to captions during training
+
+## Caption Format:
+
+Each caption starts with semantic context and describes visual features.
+
+Examples from this dataset:
+{chr(10).join(list(captions.values())[:3])}
+
+## After Training:
+
+Use trigger word in prompts:
+"[your_trigger] spacious studio with natural lighting"
+"""
+        zipf.writestr('README.txt', readme.encode('utf-8'))
+
+    zip_buffer.seek(0)
+    return (True, zip_buffer, f"Created {dataset_name}_training.zip")
+```
+
+---
+
+## Validation Pipeline
+
+### Post-Generation Checks:
+
+```python
+def validate_caption(caption: str, semantic_context: str) -> Tuple[bool, List[str]]:
+    """Validate generated caption."""
+
+    issues = []
+
+    # 1. Must start with semantic context
+    if not caption.lower().startswith(semantic_context.lower()):
+        issues.append(f"Caption must start with: {semantic_context}")
+
+    # 2. Word count (30-50)
+    word_count = len(caption.split())
+    if word_count < 30:
+        issues.append(f"Too short: {word_count} words (need 30-50)")
+    elif word_count > 50:
+        issues.append(f"Too long: {word_count} words (need 30-50)")
+
+    # 3. No banned prefixes
+    banned = ['photo of', 'image of', 'a photo', 'an image']
+    caption_lower = caption.lower()
+    for phrase in banned:
+        if phrase in caption_lower:
+            issues.append(f"Remove phrase: '{phrase}'")
+
+    # 4. Must have connecting words (natural flow)
+    connectors = ['with', 'featuring', 'showing', 'displaying', 'including']
+    has_connector = any(conn in caption_lower for conn in connectors)
+    if not has_connector:
+        issues.append("Caption should flow naturally (use 'with', 'featuring', etc.)")
+
+    return (len(issues) == 0, issues)
+```
+
+---
+
+## UI Mockup (Updated)
+
+### Main Form:
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Image Metadata Generator for LoRA Training         │
+└─────────────────────────────────────────────────────┘
+
+1. Upload Images
+   [Drop images here or click to browse]
+   ✅ 15 images uploaded
+
+2. Category
+   [Interior ▼]  (Interior | Portrait | Object | Outdoor)
+
+3. Describe the Subject/Context *
+   [TU Delft drawing studio________________________]
+
+   ℹ️ This will be the start of each caption.
+      The AI will add visual details.
+
+   Examples:
+   • Interior: "TU Delft drawing studio"
+   • Portrait: "TU Delft volunteer portrait"
+   • Object: "TU Delft prototype chair"
+
+4. Optional Tags (enhance descriptions)
+   [+] empty_room  [+] daylight  [+] modern  [+] minimalist
+
+   [Generate Captions]
+
+─────────────────────────────────────────────────────
+
+Progress: ████████░░ 80% (12 of 15)
+
+─────────────────────────────────────────────────────
+
+Image: drawing_studio_001.jpg  [←] [→]
+
+Caption (45 words ✅):
+┌─────────────────────────────────────────────────────┐
+│ TU Delft drawing studio with barrel-vaulted         │
+│ skylights providing bright diffused light, rows of  │
+│ white-topped drafting tables and wooden stools on   │
+│ dark flooring, frosted glass partitions creating    │
+│ functional educational workspace                    │
+└─────────────────────────────────────────────────────┘
+
+Status: ✅ Ready  │  Word count: 45  │  [Edit] [Regenerate]
+
+─────────────────────────────────────────────────────
+
+[Preview All Captions]  [Export Training Zip]
+```
+
+---
+
+## Summary of Changes
+
+### Removed:
+1. ❌ Trigger word input field (not in captions)
+2. ❌ "photo of" prefix (Replicate/user adds)
+3. ❌ ENV_LABEL concept (too complex)
+4. ❌ Separator `—` (not needed)
+
+### Simplified To:
+1. ✅ Semantic context input (user provides)
+2. ✅ AI description (30-50 words)
+3. ✅ Natural integration (`with`, `featuring`, etc.)
+4. ✅ Clean one-sentence format
+
+### Final Caption Structure:
+```
+{SEMANTIC_CONTEXT} {connecting_word} {visual_description}
+
+Example:
+TU Delft drawing studio with barrel-vaulted skylights, rows of white drafting tables, dark flooring, bright diffuse daylight
+```
+
+**That's it!** Clean, simple, effective.
+
+---
+
+## Implementation Checklist
+
+### Phase 1: Core Changes
+- [ ] Remove trigger_word parameter from GeminiCaptionGenerator
+- [ ] Update all prompt templates (remove "photo of" instructions)
+- [ ] Add semantic_context parameter
+- [ ] Update caption assembly (no prefix, no trigger)
+- [ ] Update validation (check for "photo of", remove if found)
+
+### Phase 2: UI Updates
+- [ ] Remove trigger word input field
+- [ ] Add semantic context field with examples
+- [ ] Add category dropdown
+- [ ] Update export to use generic name or user-provided
+- [ ] Add README.txt to zip export
+
+### Phase 3: Testing
+- [ ] Test all 4 categories
+- [ ] Verify captions start with semantic context
+- [ ] Verify 30-50 word compliance
+- [ ] Verify no "photo of" in outputs
+- [ ] Test with Replicate (if possible)
+
+---
+
+**Status**: ✅ Strategy finalized
+**Next**: Begin implementation Phase 1

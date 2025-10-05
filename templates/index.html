@@ -31,19 +31,20 @@
             </div>
         </section>
 
-        <!-- Trigger Word Section -->
+        <!-- Semantic Context Section -->
         <section class="trigger-section">
             <div class="form-group">
-                <label for="trigger-word">Trigger Word</label>
+                <label for="semantic-context">Semantic Context *</label>
                 <input
                     type="text"
-                    id="trigger-word"
-                    placeholder="e.g., ide_main_hall, ide_person"
+                    id="semantic-context"
+                    placeholder="e.g., TU Delft drawing studio, modern office workspace"
                     class="input"
                     disabled
+                    required
                 >
-                <div id="trigger-validation" class="validation-message"></div>
-                <p class="hint">Lowercase only, use underscores instead of spaces</p>
+                <div id="context-validation" class="validation-message"></div>
+                <p class="hint">Describe the space or setting (max 50 characters). This will start each caption.</p>
             </div>
 
             <!-- API Key Section (Required) -->
@@ -161,7 +162,7 @@
             Developed by <strong>Prof. Gerd Kortuem</strong> with <strong>Claude Code</strong><br>
             TU Delft, Faculty of Industrial Design Engineering |
             <a href="mailto:g.w.kortuem@tudelft.nl">g.w.kortuem@tudelft.nl</a><br>
-            <small style="opacity: 0.7;">v1.0 | October 2025</small>
+            <small style="opacity: 0.7;">v2.0 | October 2025</small>
         </p>
     </footer>
 
