@@ -62,9 +62,12 @@ session_manager = SessionManager(redis_url=REDIS_URL, file_folder=SESSION_FOLDER
 # Rate limiting configuration
 # Max concurrent sessions to prevent out-of-memory crashes
 # Each session uses ~80MB (30 images × 2MB base64 avg)
-# Render Starter (1GB): Max 12 sessions safely
-# Render Standard (2GB): Max 25 sessions safely
-MAX_CONCURRENT_SESSIONS = int(os.getenv('MAX_CONCURRENT_SESSIONS', 12))
+# Render plans:
+#   Starter (512MB): Max 6 sessions safely
+#   Standard (2GB): Max 25 sessions safely
+#   Pro (4GB): Max 50 sessions safely
+# Set via environment variable MAX_CONCURRENT_SESSIONS
+MAX_CONCURRENT_SESSIONS = int(os.getenv('MAX_CONCURRENT_SESSIONS', 6))
 SESSION_TIMEOUT_MINUTES = 30  # Auto-cleanup old sessions
 
 # Active sessions tracker (in-memory)
