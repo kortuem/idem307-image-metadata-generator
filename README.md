@@ -1,5 +1,11 @@
 # Image Metadata Generator for LoRA Training
 
+**Developed by**: Prof. Gerd Kortuem with Claude Code  
+**Institution**: TU Delft, Faculty of Industrial Design Engineering  
+**Contact**: g.w.kortuem@tudelft.nl
+
+---
+
 Automated caption generation tool for preparing image datasets for FLUX LoRA fine-tuning on Replicate.com.
 
 **🌐 Live App**: https://idem307-image-metadata-generator.onrender.com/
