@@ -49,6 +49,18 @@ logger = logging.getLogger(__name__)
 SESSION_FOLDER = Path('/tmp') / 'sessions'
 SESSION_FOLDER.mkdir(parents=True, exist_ok=True)
 
+# Rate limiting configuration
+# Max concurrent sessions to prevent out-of-memory crashes
+# Each session uses ~80MB (30 images × 2MB base64 avg)
+# Render Starter (1GB): Max 12 sessions safely
+# Render Standard (2GB): Max 25 sessions safely
+MAX_CONCURRENT_SESSIONS = int(os.getenv('MAX_CONCURRENT_SESSIONS', 12))
+SESSION_TIMEOUT_MINUTES = 30  # Auto-cleanup old sessions
+
+# Active sessions tracker (in-memory)
+# Format: {session_id: timestamp}
+active_sessions = {}
+
 def save_session(session_id, data):
     """Save session data to /tmp as JSON file."""
     session_file = SESSION_FOLDER / f"{session_id}.json"
@@ -69,6 +81,39 @@ def session_exists(session_id):
     """Check if session exists."""
     return (SESSION_FOLDER / f"{session_id}.json").exists()
 
+def cleanup_old_sessions():
+    """Remove sessions older than SESSION_TIMEOUT_MINUTES from active tracker."""
+    import time
+    current_time = time.time()
+    timeout_seconds = SESSION_TIMEOUT_MINUTES * 60
+
+    expired_sessions = [
+        sid for sid, timestamp in active_sessions.items()
+        if current_time - timestamp > timeout_seconds
+    ]
+
+    for sid in expired_sessions:
+        del active_sessions[sid]
+        logger.info(f"Removed expired session {sid} from active tracker")
+
+    return len(expired_sessions)
+
+def get_active_session_count():
+    """Get number of currently active sessions (after cleanup)."""
+    cleanup_old_sessions()
+    return len(active_sessions)
+
+def register_session(session_id):
+    """Register a new active session."""
+    import time
+    active_sessions[session_id] = time.time()
+    logger.info(f"Session {session_id} registered. Active sessions: {len(active_sessions)}/{MAX_CONCURRENT_SESSIONS}")
+
+def is_capacity_available():
+    """Check if server has capacity for new session."""
+    active_count = get_active_session_count()
+    return active_count < MAX_CONCURRENT_SESSIONS
+
 
 @app.route('/')
 def index():
@@ -80,6 +125,8 @@ def index():
 def health_check():
     """Check API health and Gemini API configuration."""
     api_key = os.getenv('GEMINI_API_KEY')
+    active_count = get_active_session_count()
+    capacity_available = is_capacity_available()
 
     if not api_key:
         return jsonify({
@@ -91,7 +138,13 @@ def health_check():
     return jsonify({
         'status': 'healthy',
         'api_key_configured': True,
-        'version': '1.0.0'
+        'version': '1.0.0',
+        'capacity': {
+            'active_sessions': active_count,
+            'max_sessions': MAX_CONCURRENT_SESSIONS,
+            'available': capacity_available,
+            'utilization_percent': round((active_count / MAX_CONCURRENT_SESSIONS) * 100, 1)
+        }
     })
 
 
@@ -130,8 +183,24 @@ def validate_trigger_word_endpoint():
 def upload_images():
     """Handle image uploads."""
     try:
+        # Check capacity BEFORE processing upload
+        if not is_capacity_available():
+            active_count = get_active_session_count()
+            logger.warning(f"Server at capacity: {active_count}/{MAX_CONCURRENT_SESSIONS} active sessions")
+            return jsonify({
+                'success': False,
+                'error': 'server_busy',
+                'message': f'Server is currently at capacity ({active_count}/{MAX_CONCURRENT_SESSIONS} users). Please wait 2-3 minutes and try again.',
+                'active_sessions': active_count,
+                'max_sessions': MAX_CONCURRENT_SESSIONS,
+                'retry_after': 120  # Suggest retry after 2 minutes
+            }), 503
+
         # Generate session ID
         session_id = uuid.uuid4().hex
+
+        # Register session immediately
+        register_session(session_id)
 
         # Create session folder
         session_folder = UPLOAD_FOLDER / session_id

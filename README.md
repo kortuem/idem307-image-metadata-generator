@@ -121,13 +121,28 @@ http://localhost:5001
 
 ## Deployment (Render.com)
 
-The app is deployed on Render.com (free tier). See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md) for detailed deployment instructions.
+The app is deployed on Render.com. See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md) for detailed deployment instructions.
 
 **Why Render over Vercel:**
 - ✅ Supports long-running processes (caption generation takes ~18s per image)
 - ✅ Persistent sessions (no "Invalid session ID" errors)
 - ✅ No timeout limits on free tier
 - ✅ Works perfectly with Flask apps
+
+### Scalability & Rate Limiting
+
+The app includes built-in **rate limiting** to prevent server crashes during workshops when multiple students use it simultaneously.
+
+**Capacity by Plan**:
+- **Free** (512 MB): 6 concurrent users
+- **Starter** ($7/mo, 1 GB): 12 concurrent users ⭐ Recommended for workshops
+- **Standard** ($25/mo, 2 GB): 25 concurrent users
+
+**For 30 students**:
+- **Option 1**: Starter plan + students work in pairs (15 sessions)
+- **Option 2**: Standard plan + all students work individually
+
+See [docs/RATE_LIMITING.md](docs/RATE_LIMITING.md) for details.
 
 ---
 
@@ -255,6 +270,7 @@ MIT License - Free to use for educational and personal projects.
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Technical architecture
 - **[docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md)** - Deployment guide
 - **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Developer workflow
+- **[docs/RATE_LIMITING.md](docs/RATE_LIMITING.md)** - Scalability & rate limiting
 
 ---
 

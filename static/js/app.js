@@ -114,12 +114,50 @@ async function checkAPIHealth() {
 
         if (data.status === 'healthy') {
             log(DEBUG.SUCCESS, 'API health check passed');
+
+            // Show capacity info if available
+            if (data.capacity) {
+                const utilization = data.capacity.utilization_percent;
+                log(DEBUG.INFO, `Server capacity: ${data.capacity.active_sessions}/${data.capacity.max_sessions} sessions (${utilization}% utilized)`);
+
+                // Warn if getting close to capacity
+                if (utilization > 80) {
+                    log(DEBUG.WARNING, `Server is ${utilization}% full. You may experience delays.`);
+                }
+            }
         } else {
             log(DEBUG.ERROR, `API health check failed: ${data.error}`);
         }
     } catch (error) {
         log(DEBUG.ERROR, `API health check failed: ${error.message}`);
     }
+}
+
+function showCapacityError(data) {
+    const message = `
+        <div class="capacity-error">
+            <h3>⚠️ Server Busy</h3>
+            <p>${data.message}</p>
+            <p><strong>Active users:</strong> ${data.active_sessions}/${data.max_sessions}</p>
+            <p><strong>Suggestion:</strong> Please wait 2-3 minutes and try again.</p>
+            <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 1rem;">
+                Retry Now
+            </button>
+        </div>
+    `;
+
+    // Show in alert or modal
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-warning';
+    alertDiv.innerHTML = message;
+    alertDiv.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; max-width: 500px; padding: 2rem; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);';
+
+    document.body.appendChild(alertDiv);
+
+    log(DEBUG.ERROR, `Server at capacity: ${data.active_sessions}/${data.max_sessions} users active`);
+
+    // Auto-remove after 10 seconds
+    setTimeout(() => alertDiv.remove(), 10000);
 }
 
 // File Upload
@@ -171,6 +209,13 @@ async function handleFileUpload(event) {
         });
 
         const data = await uploadPromise;
+
+        // Check for capacity error (503)
+        if (!data.success && data.error === 'server_busy') {
+            progressSection.style.display = 'none';
+            showCapacityError(data);
+            return;
+        }
 
         // Update progress to complete
         progressBar.style.width = '100%';
