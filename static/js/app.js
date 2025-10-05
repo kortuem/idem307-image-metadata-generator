@@ -134,7 +134,7 @@ async function handleFileUpload(event) {
 
     // Show upload progress
     const progressSection = document.getElementById('progress-section');
-    const progressBar = document.getElementById('progress-bar');
+    const progressBar = document.getElementById('progress-fill');
     const progressText = document.getElementById('progress-text');
     progressSection.style.display = 'block';
     progressBar.style.width = '0%';
