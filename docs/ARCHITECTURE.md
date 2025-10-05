@@ -618,4 +618,4 @@ image-metadata-generator/
 
 ---
 
-**Last Updated**: January 2025 (v1.0)
+**Last Updated**: October 2025 (v1.0)

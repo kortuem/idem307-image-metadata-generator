@@ -217,7 +217,7 @@ SECRET_ACCESS_CODE=your_chosen_code
 
 ## Version History
 
-**v1.0** (January 2025)
+**v1.0** (October 2025)
 - ✅ Initial production release
 - ✅ Deployed on Render.com
 - ✅ Full Replicate.com FLUX LoRA format support
