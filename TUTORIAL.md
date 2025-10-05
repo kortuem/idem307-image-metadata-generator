@@ -1,5 +1,9 @@
 # Image Metadata Generator - Student Tutorial
 
+**Developed by**: Prof. Gerd Kortuem with Claude Code  
+**Institution**: TU Delft, Faculty of Industrial Design Engineering  
+**Contact**: g.w.kortuem@tudelft.nl
+
 **🌐 Access the tool**: https://idem307-image-metadata-generator.onrender.com/
 
 This tutorial will guide you through preparing your image dataset for FLUX LoRA fine-tuning on Replicate.com.
