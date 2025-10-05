@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 from utils.caption_generator import GeminiCaptionGenerator
 from utils.image_processor import validate_image, create_thumbnail, sanitize_filename
 from utils.metadata_exporter import create_training_zip_in_memory, preview_metadata_content
+from utils.session_manager import SessionManager
 
 # Load environment variables
 load_dotenv()
@@ -42,11 +43,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Session storage for Vercel compatibility
-# Store everything in /tmp/sessions as JSON files (including base64 images)
-# This works on Vercel because warm containers keep /tmp for 5-15 minutes
-SESSION_FOLDER = Path('/tmp') / 'sessions'
-SESSION_FOLDER.mkdir(parents=True, exist_ok=True)
+# Session storage - Redis (optional) or file-based (default)
+# For Render paid plans: use persistent disk at /data (configured in dashboard)
+# For local dev: use /tmp/sessions
+REDIS_URL = os.getenv('REDIS_URL')
+
+# Try /data first (Render persistent disk), fallback to /tmp for local dev
+try:
+    SESSION_FOLDER = Path('/data/sessions')
+    SESSION_FOLDER.mkdir(parents=True, exist_ok=True)
+except (PermissionError, OSError):
+    SESSION_FOLDER = Path('/tmp/sessions')
+    SESSION_FOLDER.mkdir(parents=True, exist_ok=True)
+    logger.info("Using /tmp/sessions (no persistent disk available)")
+
+session_manager = SessionManager(redis_url=REDIS_URL, file_folder=SESSION_FOLDER)
 
 # Rate limiting configuration
 # Max concurrent sessions to prevent out-of-memory crashes
@@ -61,24 +72,22 @@ SESSION_TIMEOUT_MINUTES = 30  # Auto-cleanup old sessions
 active_sessions = {}
 
 def save_session(session_id, data):
-    """Save session data to /tmp as JSON file."""
-    session_file = SESSION_FOLDER / f"{session_id}.json"
-    with open(session_file, 'w') as f:
-        json.dump(data, f)
-    logger.info(f"Session {session_id} saved to {session_file}")
+    """Save session data using SessionManager (Redis or file-based)."""
+    success = session_manager.save_session(session_id, data)
+    if success:
+        logger.info(f"Session {session_id[:16]}... saved ({session_manager.get_storage_type()})")
+    return success
 
 def load_session(session_id):
-    """Load session data from /tmp JSON file."""
-    session_file = SESSION_FOLDER / f"{session_id}.json"
-    if not session_file.exists():
-        logger.error(f"Session {session_id} not found at {session_file}")
-        return None
-    with open(session_file, 'r') as f:
-        return json.load(f)
+    """Load session data using SessionManager (Redis or file-based)."""
+    data = session_manager.load_session(session_id)
+    if not data:
+        logger.error(f"Session {session_id[:16]}... not found ({session_manager.get_storage_type()})")
+    return data
 
 def session_exists(session_id):
     """Check if session exists."""
-    return (SESSION_FOLDER / f"{session_id}.json").exists()
+    return session_manager.session_exists(session_id)
 
 def cleanup_old_sessions():
     """Remove sessions older than SESSION_TIMEOUT_MINUTES from active tracker."""
@@ -141,6 +150,7 @@ def health_check():
         'status': 'healthy',
         'api_key_configured': True,
         'access_code_configured': access_code_configured,
+        'session_storage': session_manager.get_storage_type(),
         'version': '2.0.0',
         'capacity': {
             'active_sessions': active_count,
@@ -426,14 +436,6 @@ def generate_single_caption():
 
         session_data = load_session(session_id)
         if not session_data:
-            # Log detailed error for debugging
-            session_file = SESSION_FOLDER / f"{session_id}.json"
-            logger.error(f"Session not found: {session_id}")
-            logger.error(f"Looking for: {session_file}")
-            logger.error(f"SESSION_FOLDER exists: {SESSION_FOLDER.exists()}")
-            if SESSION_FOLDER.exists():
-                existing_sessions = list(SESSION_FOLDER.glob("*.json"))
-                logger.error(f"Existing sessions: {len(existing_sessions)}")
             return jsonify({
                 'success': False,
                 'error': 'Invalid session ID'
