@@ -426,6 +426,14 @@ def generate_single_caption():
 
         session_data = load_session(session_id)
         if not session_data:
+            # Log detailed error for debugging
+            session_file = SESSION_FOLDER / f"{session_id}.json"
+            logger.error(f"Session not found: {session_id}")
+            logger.error(f"Looking for: {session_file}")
+            logger.error(f"SESSION_FOLDER exists: {SESSION_FOLDER.exists()}")
+            if SESSION_FOLDER.exists():
+                existing_sessions = list(SESSION_FOLDER.glob("*.json"))
+                logger.error(f"Existing sessions: {len(existing_sessions)}")
             return jsonify({
                 'success': False,
                 'error': 'Invalid session ID'
