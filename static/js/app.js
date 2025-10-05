@@ -199,6 +199,13 @@ async function handleFileUpload(event) {
             xhr.addEventListener('load', () => {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     resolve(JSON.parse(xhr.responseText));
+                } else if (xhr.status === 503) {
+                    // Parse 503 response (server busy) - treat as resolved to show error
+                    try {
+                        resolve(JSON.parse(xhr.responseText));
+                    } catch (e) {
+                        reject(new Error(`Server busy (503)`));
+                    }
                 } else {
                     reject(new Error(`Upload failed: ${xhr.status}`));
                 }
