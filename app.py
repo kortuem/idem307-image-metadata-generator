@@ -88,9 +88,47 @@ session_manager = SessionManager(redis_url=REDIS_URL, file_folder=SESSION_FOLDER
 MAX_CONCURRENT_SESSIONS = int(os.getenv('MAX_CONCURRENT_SESSIONS', 6))
 SESSION_TIMEOUT_MINUTES = 30  # Auto-cleanup old sessions
 
-# Active sessions tracker (in-memory)
+# Active sessions tracker (in-memory, rebuilt from filesystem on startup)
 # Format: {session_id: timestamp}
 active_sessions = {}
+
+def rebuild_active_sessions():
+    """
+    Rebuild active_sessions tracker from filesystem on startup.
+    This ensures sessions survive app restarts (within same container).
+    """
+    import time
+    import os
+
+    if session_manager.storage_type == 'redis':
+        logger.info("Using Redis - session tracking handled by Redis TTL")
+        return
+
+    # File-based: rebuild from session files
+    session_files = list(SESSION_FOLDER.glob('*.json'))
+    current_time = time.time()
+    timeout_seconds = SESSION_TIMEOUT_MINUTES * 60
+
+    for session_file in session_files:
+        session_id = session_file.stem  # filename without .json
+        mtime = session_file.stat().st_mtime
+
+        # Check if session is still valid (within timeout)
+        if current_time - mtime < timeout_seconds:
+            active_sessions[session_id] = mtime
+            logger.debug(f"Restored session {session_id[:8]}... (age: {(current_time - mtime)/60:.1f}m)")
+        else:
+            # Delete expired session file
+            try:
+                session_file.unlink()
+                logger.info(f"Deleted expired session file: {session_file.name}")
+            except Exception as e:
+                logger.error(f"Failed to delete expired session {session_file.name}: {e}")
+
+    logger.info(f"Rebuilt {len(active_sessions)} active sessions from filesystem")
+
+# Rebuild active sessions on app startup
+rebuild_active_sessions()
 
 def save_session(session_id, data):
     """Save session data using SessionManager (Redis or file-based)."""
@@ -111,7 +149,7 @@ def session_exists(session_id):
     return session_manager.session_exists(session_id)
 
 def cleanup_old_sessions():
-    """Remove sessions older than SESSION_TIMEOUT_MINUTES from active tracker."""
+    """Remove sessions older than SESSION_TIMEOUT_MINUTES from active tracker AND filesystem."""
     import time
     current_time = time.time()
     timeout_seconds = SESSION_TIMEOUT_MINUTES * 60
@@ -122,8 +160,21 @@ def cleanup_old_sessions():
     ]
 
     for sid in expired_sessions:
+        # Remove from in-memory tracker
         del active_sessions[sid]
-        logger.info(f"Removed expired session {sid} from active tracker")
+
+        # Delete session file (if file-based storage)
+        if session_manager.storage_type == 'file':
+            session_file = SESSION_FOLDER / f"{sid}.json"
+            try:
+                if session_file.exists():
+                    session_file.unlink()
+                    logger.info(f"Deleted expired session file: {sid[:8]}...")
+            except Exception as e:
+                logger.error(f"Failed to delete session file {sid[:8]}...: {e}")
+        else:
+            # Redis handles expiration automatically via TTL
+            logger.info(f"Removed expired session {sid[:8]}... from active tracker")
 
     return len(expired_sessions)
 
