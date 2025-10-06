@@ -202,6 +202,14 @@ def update_session_activity(session_id):
     if session_id in active_sessions:
         active_sessions[session_id] = time.time()
         logger.debug(f"Session {session_id[:8]}... activity updated")
+    else:
+        # Session not in active_sessions dict - check if file exists and re-register
+        # This can happen if server restarts between upload and caption generation
+        if session_manager.session_exists(session_id):
+            active_sessions[session_id] = time.time()
+            logger.warning(f"Session {session_id[:8]}... not in active_sessions, re-registered from disk")
+        else:
+            logger.error(f"Session {session_id[:8]}... not found in active_sessions or on disk")
 
 def is_capacity_available():
     """Check if server has capacity for new session."""
