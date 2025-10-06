@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 class GeminiCaptionGenerator:
     """Generates image captions using Google Gemini vision API."""
 
-    # Interior category prompt template for LoRA training
+    # Category-specific prompt templates for LoRA training
+
     INTERIOR_PROMPT = """You are annotating images for LoRA fine-tuning of a Flux image model.
 Output exactly ONE sentence, maximum 50 words, grounded only in visible evidence.
 
@@ -41,22 +42,197 @@ Critical rules:
 - Single sentence only
 - Output only the sentence"""
 
-    def __init__(self, api_key: Optional[str] = None):
+    PERSON_PROMPT = """You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence, maximum 50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
+
+After "{SEMANTIC_CONTEXT}", add a natural connector word (wearing, with, in, showing) and describe in order:
+1. Physical appearance and distinguishing features
+2. Clothing, accessories, and style
+3. Pose, gesture, or activity
+4. Facial expression or mood
+5. Background or setting context
+
+Aim for 40-50 words to provide rich, specific detail.
+
+Example:
+"{SEMANTIC_CONTEXT} wearing black turtleneck and blue jeans, standing with arms crossed in confident pose, slight smile and direct gaze, against minimalist white background with soft studio lighting creating professional portrait atmosphere"
+
+Critical rules:
+- Start EXACTLY with: {SEMANTIC_CONTEXT}
+- No "photo of" or "image of"
+- Maximum 50 words, aim for 40-50
+- Single sentence only
+- Output only the sentence"""
+
+    OBJECT_PROMPT = """You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence, maximum 50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
+
+After "{SEMANTIC_CONTEXT}", add a natural connector word (with, featuring, made of, showing) and describe in order:
+1. Overall shape and form
+2. Materials, texture, and finish
+3. Colors and visual details
+4. Function or design purpose
+5. Context or background setting
+
+Aim for 40-50 words to provide rich, specific detail.
+
+Example:
+"{SEMANTIC_CONTEXT} with sleek minimalist design and rounded edges, brushed aluminum body with matte black accents, compact rectangular form, precision-engineered controls, photographed on white seamless background with soft diffused lighting highlighting premium build quality"
+
+Critical rules:
+- Start EXACTLY with: {SEMANTIC_CONTEXT}
+- No "photo of" or "image of"
+- Maximum 50 words, aim for 40-50
+- Single sentence only
+- Output only the sentence"""
+
+    SCENE_PROMPT = """You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence, maximum 50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
+
+After "{SEMANTIC_CONTEXT}", add a natural connector word (with, featuring, showing, under) and describe in order:
+1. Main environmental elements and composition
+2. Weather conditions or time of day
+3. Natural or artificial lighting quality
+4. Colors, atmosphere, and mood
+5. Notable visual details or focal points
+
+Aim for 40-50 words to provide rich, specific detail.
+
+Example:
+"{SEMANTIC_CONTEXT} with rolling green hills extending to distant mountains under partly cloudy sky, golden hour sunlight casting long shadows across pastoral landscape, scattered trees and winding dirt path, warm saturated colors creating serene peaceful atmosphere"
+
+Critical rules:
+- Start EXACTLY with: {SEMANTIC_CONTEXT}
+- No "photo of" or "image of"
+- Maximum 50 words, aim for 40-50
+- Single sentence only
+- Output only the sentence"""
+
+    PEOPLE_PROMPT = """You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence, maximum 50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
+
+After "{SEMANTIC_CONTEXT}", add a natural connector word (with, engaged in, showing, working in) and describe in order:
+1. Number and type of people (students, coworkers, group)
+2. Their activity or interaction
+3. Spatial arrangement and body language
+4. Environment and visible objects
+5. Lighting and overall atmosphere
+
+Aim for 40-50 words to provide rich, specific detail.
+
+Example:
+"{SEMANTIC_CONTEXT} with five students engaged in collaborative discussion around large table, leaning forward with focused expressions, gesturing at shared design materials, bright modern classroom with whiteboards and task lighting creating productive energetic atmosphere"
+
+Critical rules:
+- Start EXACTLY with: {SEMANTIC_CONTEXT}
+- No "photo of" or "image of"
+- Maximum 50 words, aim for 40-50
+- Single sentence only
+- Output only the sentence"""
+
+    VEHICLE_PROMPT = """You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence, maximum 50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
+
+After "{SEMANTIC_CONTEXT}", add a natural connector word (with, featuring, showing, captured from) and describe in order:
+1. Vehicle type and model characteristics
+2. Viewing angle or perspective (front, side, three-quarter)
+3. Surface materials, colors, and finish
+4. Setting or environment context
+5. Lighting conditions and visual impact
+
+Aim for 40-50 words to provide rich, specific detail.
+
+Example:
+"{SEMANTIC_CONTEXT} with sleek aerodynamic body and distinctive LED headlights, captured from three-quarter front angle, glossy metallic silver paint with chrome accents, positioned in modern minimalist studio, dramatic side lighting highlighting sculptural surfacing and premium build quality"
+
+Critical rules:
+- Start EXACTLY with: {SEMANTIC_CONTEXT}
+- No "photo of" or "image of"
+- Maximum 50 words, aim for 40-50
+- Single sentence only
+- Output only the sentence"""
+
+    EXTERIOR_PROMPT = """You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence, maximum 50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
+
+After "{SEMANTIC_CONTEXT}", add a natural connector word (with, featuring, showing, captured at) and describe in order:
+1. Building type and architectural features
+2. Main materials and facade treatment
+3. Surrounding context (street, landscape, sky)
+4. Time of day and lighting conditions
+5. Overall character or urban relationship
+
+Aim for 40-50 words to provide rich, specific detail.
+
+Example:
+"{SEMANTIC_CONTEXT} with modern glass and steel facade featuring floor-to-ceiling windows and angular geometric form, surrounded by landscaped plaza with mature trees, captured at golden hour with warm sunlight illuminating translucent surfaces creating dynamic interplay of light and shadow"
+
+Critical rules:
+- Start EXACTLY with: {SEMANTIC_CONTEXT}
+- No "photo of" or "image of"
+- Maximum 50 words, aim for 40-50
+- Single sentence only
+- Output only the sentence"""
+
+    ABSTRACT_PROMPT = """You are annotating images for LoRA fine-tuning of a Flux image model.
+Output exactly ONE sentence, maximum 50 words, grounded only in visible evidence.
+
+Your sentence MUST begin with: "{SEMANTIC_CONTEXT}"
+
+After "{SEMANTIC_CONTEXT}", add a natural connector word (with, featuring, showing, composed of) and describe in order:
+1. Medium or technique (digital, watercolor, sketch, diagram)
+2. Compositional structure (geometric, organic, grid-based)
+3. Dominant colors and shapes
+4. Texture, layering, or surface quality
+5. Overall style or aesthetic mood
+
+Aim for 40-50 words to provide rich, specific detail.
+
+Example:
+"{SEMANTIC_CONTEXT} with layered digital composition featuring intersecting geometric forms and organic flowing lines, bold primary colors contrasted with subtle gradients, smooth vector surfaces mixed with textured brush elements creating dynamic minimalist aesthetic with balanced tension between order and spontaneity"
+
+Critical rules:
+- Start EXACTLY with: {SEMANTIC_CONTEXT}
+- No "photo of" or "image of"
+- Maximum 50 words, aim for 40-50
+- Single sentence only
+- Output only the sentence"""
+
+    def __init__(self, api_key: Optional[str] = None, slow_mode: bool = False):
         """
         Initialize the caption generator.
 
         Args:
             api_key: Gemini API key (defaults to GEMINI_API_KEY env var)
+            slow_mode: Enable slow mode (3s delay, useful for rate limiting or high load)
         """
         self.api_key = api_key or os.getenv('GEMINI_API_KEY')
         self.last_request_time = 0
-        self.rate_limit_delay = 0.1  # Minimal delay for paid tier (Tier 1: 1,000 RPM = 0.06s min)
+        self.slow_mode = slow_mode
+        # Slow mode: 3s delay (reduces API load, helps with rate limits)
+        # Normal mode: 0.1s delay (paid tier supports 1,000 RPM = 0.06s min)
+        self.rate_limit_delay = 3.0 if slow_mode else 0.1
 
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
 
         # Configure Gemini API
         genai.configure(api_key=self.api_key)
+
+        if slow_mode:
+            logger.info("🐢 Slow mode enabled: 3s delay between API calls")
 
         # Model names for google-generativeai 0.8.x (latest API)
         # Prioritize Gemini 2.5 Flash for cost-effective image analysis:
@@ -107,13 +283,30 @@ Critical rules:
             try:
                 return func()
             except Exception as e:
+                error_type = type(e).__name__
+                error_msg = str(e)
+
+                # Categorize error for better monitoring
+                if 'quota' in error_msg.lower() or 'rate' in error_msg.lower() or '429' in error_msg:
+                    error_category = "RATE_LIMIT"
+                    logger.error(f"⚠️ RATE LIMIT ERROR (attempt {attempt + 1}/{max_retries}): {error_msg}")
+                elif '503' in error_msg or 'unavailable' in error_msg.lower():
+                    error_category = "SERVICE_UNAVAILABLE"
+                    logger.error(f"⚠️ SERVICE UNAVAILABLE (attempt {attempt + 1}/{max_retries}): {error_msg}")
+                elif '500' in error_msg or 'internal' in error_msg.lower():
+                    error_category = "SERVER_ERROR"
+                    logger.error(f"⚠️ SERVER ERROR (attempt {attempt + 1}/{max_retries}): {error_msg}")
+                else:
+                    error_category = "OTHER"
+                    logger.error(f"⚠️ API ERROR ({error_type}, attempt {attempt + 1}/{max_retries}): {error_msg}")
+
                 if attempt == max_retries - 1:
-                    logger.error(f"Failed after {max_retries} attempts: {e}")
+                    logger.error(f"💥 FAILED after {max_retries} attempts - Error: {error_category}")
                     raise
 
                 # Exponential backoff: 1s, 2s, 4s, 8s...
                 backoff_time = 2 ** attempt
-                logger.warning(f"Attempt {attempt + 1}/{max_retries} failed: {e}. Retrying in {backoff_time}s...")
+                logger.warning(f"Retrying in {backoff_time}s...")
                 time.sleep(backoff_time)
 
     def _validate_caption(self, caption: str, semantic_context: str) -> Tuple[bool, str, list]:
@@ -164,13 +357,14 @@ Critical rules:
         # Success - no critical issues
         return (True, caption, issues)
 
-    def generate_caption(self, image_path: str, semantic_context: str) -> Tuple[bool, str, Optional[str]]:
+    def generate_caption(self, image_path: str, semantic_context: str, category: str = 'interior') -> Tuple[bool, str, Optional[str]]:
         """
         Generate a caption for an image.
 
         Args:
             image_path: Path to the image file
             semantic_context: User-provided context (e.g., "TU Delft drawing studio")
+            category: Image category ('interior', 'person', 'object', 'scene')
 
         Returns:
             Tuple of (success: bool, caption: str, error: Optional[str])
@@ -199,8 +393,20 @@ Critical rules:
                 image_path = temp_path
                 image = Image.open(image_path)
 
-            # Inject semantic context into prompt
-            prompt = self.INTERIOR_PROMPT.replace("{SEMANTIC_CONTEXT}", semantic_context)
+            # Select prompt based on category
+            prompt_map = {
+                'interior': self.INTERIOR_PROMPT,
+                'person': self.PERSON_PROMPT,
+                'object': self.OBJECT_PROMPT,
+                'scene': self.SCENE_PROMPT,
+                'people': self.PEOPLE_PROMPT,
+                'vehicle': self.VEHICLE_PROMPT,
+                'exterior': self.EXTERIOR_PROMPT,
+                'abstract': self.ABSTRACT_PROMPT
+            }
+
+            prompt_template = prompt_map.get(category.lower(), self.INTERIOR_PROMPT)
+            prompt = prompt_template.replace("{SEMANTIC_CONTEXT}", semantic_context)
 
             # Generate caption with retry logic
             def api_call():

@@ -187,39 +187,6 @@ def create_training_zip_in_memory(
                 else:
                     logger.warning(f"Image not found, skipping: {filename}")
 
-            # Add README.txt with instructions
-            from datetime import datetime
-            first_captions = list(captions.values())[:3]
-            readme_content = f"""# LoRA Training Dataset
-
-Generated: {datetime.now().strftime('%Y-%m-%d')}
-Tool: Image Metadata Generator v2.0
-Category: Interior/Architecture
-
-## Instructions for Replicate.com:
-
-1. Upload this zip to Replicate
-2. When prompted, enter your trigger word (e.g., "tudelft_interior", "myspace")
-3. Replicate will prepend your trigger to each caption during training
-
-## Caption Format:
-
-Captions start with space description, maximum 50 words.
-
-Examples from this dataset:
-{chr(10).join(f'- {cap.strip().rstrip(".!?,;:")}' for cap in first_captions[:3])}
-
-## After Training:
-
-Use your trigger word in prompts:
-"[your_trigger] spacious design studio with natural lighting"
-
-Example with trigger "tudelft_interior":
-"tudelft_interior spacious modern studio with large windows"
-"""
-            zipf.writestr('README.txt', readme_content.encode('utf-8'))
-            logger.debug("Added README.txt")
-
         # Get zip size
         zip_size = zip_buffer.tell()
         zip_size_mb = zip_size / (1024 * 1024)

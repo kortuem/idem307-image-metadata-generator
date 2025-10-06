@@ -40,6 +40,12 @@
                     <strong>Upload limits:</strong> Max 100 images, 10MB per image, 100MB total<br>
                     After downloading ZIP, you can upload a new dataset
                 </p>
+                <div style="text-align: center; margin-top: 0.75rem;">
+                    <label style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="slow-mode" style="cursor: pointer;">
+                        <span style="font-size: 0.9rem;"><strong>🐢 Slow Mode</strong> (Use if server is busy or rate limited)</span>
+                    </label>
+                </div>
             </div>
 
             <div class="upload-info" id="upload-info" style="display: none;">
@@ -50,6 +56,21 @@
 
         <!-- Semantic Context Section -->
         <section class="trigger-section">
+            <div class="form-group">
+                <label for="category">Image Category *</label>
+                <select id="category" class="input" disabled>
+                    <option value="interior">Interior/Architecture (spaces, rooms)</option>
+                    <option value="person">Person/Portrait (individual)</option>
+                    <option value="people">People/Groups (multiple people, activities)</option>
+                    <option value="object">Object/Product (items, tools, designs)</option>
+                    <option value="vehicle">Vehicle/Machine (cars, bikes, robots)</option>
+                    <option value="exterior">Exterior/Building (facades, structures)</option>
+                    <option value="scene">Scene/Landscape (nature, outdoors)</option>
+                    <option value="abstract">Abstract/Artwork (sketches, diagrams)</option>
+                </select>
+                <p class="hint">Select the type of images in your dataset</p>
+            </div>
+
             <div class="form-group">
                 <label for="semantic-context">Semantic Context *</label>
                 <input

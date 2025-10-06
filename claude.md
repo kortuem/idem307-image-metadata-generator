@@ -5,139 +5,108 @@
 
 ---
 
-## Project Status
+## Project Overview
 
-**Status**: 🚧 **UPGRADING to v2.0** - Interior category MVP
-**Live App**: https://idem307-image-metadata-generator.onrender.com/ (v1.0)
-**Repository**: https://github.com/kortuem/idem307-image-metadata-generator
-
-**Purpose**: Flask web app for generating AI-powered image captions for LoRA training datasets. Built for TU Delft IDEM307 workshop students.
+**Status**: ✅ Production v1.0 - Workshop Wednesday (30 students concurrent)
+**Live App**: https://idem307-image-metadata-generator.onrender.com/
+**Purpose**: Flask app for AI-powered image captions for LoRA training (TU Delft workshop)
 
 ---
 
-## Critical Rules (v2.0 - DO NOT BREAK)
+## Commands
 
-### 1. Caption Format (UPDATED)
+```bash
+# Local development
+python3 app.py              # Run dev server (port 5001)
 
-**New format** (Replicate adds trigger word during training):
+# Deployment
+git push                    # Auto-deploys to Render
+
+# Environment
+# Render: Hobby plan ($7) + Standard instance ($25, 2GB RAM)
+# Gemini 2.5 Flash (paid tier, 1000 RPM)
+# MAX_CONCURRENT_SESSIONS=30
+
+# Image Categories (8 types)
+# - Interior/Architecture: Spaces, rooms, interior environments
+# - Person/Portrait: Individual person, face, portrait
+# - People/Groups: Multiple people, activities, interactions
+# - Object/Product: Items, tools, designed objects
+# - Vehicle/Machine: Cars, bikes, robots, transportation
+# - Exterior/Building: Building facades, architectural exteriors
+# - Scene/Landscape: Nature, outdoor scenes, environments
+# - Abstract/Artwork: Sketches, diagrams, digital compositions
+# Each category uses specialized prompts optimized for that content type
+
+# Slow Mode (Workshop Safety Valve)
+# Students can enable via checkbox in UI
+# - Increases delay: 0.1s → 3s between API calls
+# - Use if: API rate limits hit, or server overloaded
+# - Reduces throughput but prevents failures
 ```
-{SEMANTIC_CONTEXT} {connector} {description}
-```
-
-**Example**:
-```
-TU Delft drawing studio with high barrel-vaulted skylights providing bright diffused natural light, multiple rows of white-topped drafting tables on dark flooring, frosted glass partitions, creating functional educational workspace
-```
-
-**Rules**:
-- MUST start with semantic context (exact match)
-- Max 50 words, aim for 40-50 for detail
-- NO "photo of" prefix (not needed)
-- NO trigger word in caption (Replicate adds it)
-- Single sentence, no trailing punctuation
-
-**Never Accept**:
-- ❌ `photo of TU Delft...` (no "photo of")
-- ❌ `ide_interior TU Delft...` (no trigger word)
-- ❌ Captions >50 words (too long)
-- ❌ Multiple sentences
-
-### 2. Export Format (UNCHANGED)
-
-**Replicate requires**: Individual .txt file per image
-```
-trigger_word_training.zip
-├── image1.jpg
-├── image1.txt    ← NOT a single metadata.txt file
-├── image2.jpg
-├── image2.txt
-└── ...
-```
-
-### 3. Security
-
-**Never commit**:
-- `.env` file (contains real API keys)
-- `static/uploads/*` (temporary files)
-
-**Safe to commit**:
-- `.env.example` (template only)
-- All documentation
-- Source code
 
 ---
 
-## Development Principles
+## Critical Rules (DO NOT BREAK)
 
-### 1. User-Centered
-- **Primary users**: Non-technical students
-- **Secondary user**: Instructor (technical but not Python expert)
-- Clear error messages in plain language
-- Works on first try (no complex setup required)
+### Caption Format
+**MUST be**: `photo of [trigger_word] [description]`
+- Literal "photo of " (lowercase, space after)
+- Replicate.com requirement - breaks training if violated
+- No punctuation at end
 
-### 2. Reliability Over Features
-- Better to do one thing well than many things poorly
-- Don't break existing functionality
-- Test locally before suggesting changes
-- Graceful degradation (fallback models if primary fails)
+**Never accept**: `A photo of`, `Photo of`, `trigger_word description`
 
-### 3. Code Quality
-- Clear variable names (`trigger_word`, not `tw`)
+### Export Format
+Individual .txt file per image (Replicate requirement):
+```
+image1.jpg
+image1.txt  ← NOT a single metadata.txt
+image2.jpg
+image2.txt
+```
+
+### Security
+- Never commit: `.env`, `static/uploads/*`
+- Safe to commit: `.env.example`, all docs, source code
+
+---
+
+## Session Management (Bug-Prone Area)
+
+**Critical implementation details** (has caused production bugs):
+
+1. **Timestamp tracking**: Uses `active_sessions` dict, NOT file mtime
+2. **Update on activity**: Call `update_session_activity()` on every caption request
+3. **Cleanup logic**: Checks `active_sessions[sid]` timestamp for 2hr timeout
+4. **Three-tier cleanup**:
+   - Client: Delete old session before new upload
+   - Server: Delete after ZIP export
+   - Abandoned: 2hr timeout based on dict timestamp
+
+**Known bug (fixed in 4bb282c)**: Cleanup was checking file mtime instead of dict timestamp, causing sessions to be deleted 2hrs after UPLOAD instead of 2hrs after LAST ACTIVITY.
+
+---
+
+## Code Style
+
+- Clear variable names: `trigger_word` not `tw`
 - Comments for non-obvious logic
-- Modular functions (single responsibility)
-- Use `pathlib` for cross-platform file paths
+- `pathlib` for cross-platform paths
 - Proper error handling with try/except
 
 ---
 
-## Technical Constraints
+## Debugging Guidelines
 
-### Stack
-- **Backend**: Flask (Python 3.9+)
-- **AI**: Google Gemini 2.5 Pro vision API
-- **Frontend**: Vanilla JavaScript (no frameworks)
-- **Deployment**: Render.com (free tier)
-- **Session Storage**: Base64-encoded images in `/tmp/sessions/*.json`
+**When bugs occur**:
+1. Ask for complete context (full logs, exact sequence, timing)
+2. Trace complete flow (don't assume - verify every step)
+3. Document assumptions first (write how it SHOULD work)
+4. Audit critical paths when in doubt
+5. **Fix root cause, not symptoms**
 
-### Why This Stack?
-- **Flask**: Simple, flexible, well-understood
-- **Gemini 2.5 Pro**: Best quality for image analysis (~18s per image acceptable)
-- **Render**: Supports long processes, persistent sessions (Vercel failed - stateless)
-- **Base64 in JSON**: Simplifies stateless/serverless architecture
-
-### API Configuration
-- Model: `gemini-2.5-pro` (with fallback chain)
-- Rate limit: 2s delay between requests
-- Free tier: 1,500 req/day (sufficient for ~750 images)
-- Auth: `GEMINI_API_KEY` + `SECRET_ACCESS_CODE` env vars
-
----
-
-## Communication Guidelines
-
-### When Making Changes
-
-✅ **Do**:
-- Provide complete, working code (not pseudocode)
-- Test changes locally before suggesting
-- Explain trade-offs when multiple approaches exist
-- Update documentation if architecture changes
-- Show examples of expected output
-
-❌ **Don't**:
-- Break existing functionality
-- Change caption format (breaks Replicate compatibility)
-- Remove error handling
-- Add dependencies without discussing
-- Make assumptions about user's environment
-
-### When User Reports Issues
-
-1. **Reproduce** locally if possible
-2. **Check logs** (terminal or Render dashboard)
-3. **Identify root cause** before suggesting fixes
-4. **Provide complete fix** (don't leave half-done)
-5. **Test the fix** before pushing to production
+**Lesson learned**: "Invalid session ID" bug took multiple attempts because we fixed symptoms (added updates, cleanup, delete-on-export) instead of finding root cause (cleanup checking wrong timestamp). Systematic audit on day 1 would have found it immediately.
 
 ---
 
@@ -146,63 +115,29 @@ trigger_word_training.zip
 **Prof. Gerd Kortuem**:
 - Technical but not Python expert
 - Values reliability > features
-- Teaching workshop (6 datasets, ~180 images total)
-- Tool saves 12-18 hours of manual work
-- Quality matters (teaching materials)
+- Prefers deploy-and-test workflow (not local testing first)
+- Workshop: 30 students, 4 hours, 20-40 images each
 
-**Students** (indirect users):
-- Non-technical
-- Need simple, working tool
-- Process 20-40 images each
-- Upload results to Replicate.com
+**Students**: Non-technical, need simple working tool
 
 ---
 
-## Development Approach (v2.0)
+## Development Principles
 
-### Documentation Strategy
-- **ONE specification**: [SPECIFICATION.md](SPECIFICATION.md) - Single source of truth
-- **Archive analysis docs**: Move exploration docs to `docs/archive/`
-- **Avoid creating**: Temporary documents, multiple specs, redundant files
-- **Keep minimal**: Only essential documentation
-
-### Testing Approach
-- **Phase 1**: Interior category only (MVP)
-- **Test with real images**: 5 TU Delft interior photos
-- **Manual testing first**: Verify captions work before automating
-- **Iterate**: Get Interior perfect before adding other categories
-
-### Implementation Strategy
-1. **Start simple**: Interior category only
-2. **Test early**: Don't wait until complete
-3. **One thing at a time**: Perfect one feature before next
-4. **No premature optimization**: Make it work, then make it better
-
-### When Developing
-✅ **Do**:
-- Focus on ONE category (Interior) first
-- Test with real images frequently
-- Keep specification updated in ONE place
-- Archive exploration/analysis docs
-
-❌ **Don't**:
-- Create multiple specification documents
-- Add all categories at once
-- Write extensive docs before testing
-- Keep temporary analysis files in root
+1. **Reliability over features** - Do one thing well
+2. **Understand root causes** - Don't just fix symptoms
+3. **User-centered** - Clear error messages, works first try
+4. **Graceful degradation** - Fallback models if primary fails
 
 ---
 
 ## Project Documentation
 
-**Active**:
-- **[SPECIFICATION.md](SPECIFICATION.md)** - Technical spec (v2.0)
-- **[README.md](README.md)** - Project overview
-- **[CLAUDE.md](CLAUDE.md)** - This file (AI instructions)
-
-**Archive** (reference only):
-- `docs/archive/` - Old specs, analysis, exploration docs
+- [README.md](README.md) - Project overview
+- [TUTORIAL.md](TUTORIAL.md) - Student guide
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - Technical architecture
+- [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md) - Deployment guide
 
 ---
 
-**Last Updated**: October 2025 (v2.0 in progress)
+**Last Updated**: October 2025 (v1.0)

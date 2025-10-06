@@ -32,11 +32,12 @@ This web application automates the time-consuming task of writing captions for i
 
 1. Go to: https://idem307-image-metadata-generator.onrender.com/
 2. Upload 20-40 images from your dataset
-3. Enter your trigger word (e.g., `ide_main_hall`)
-4. Enter the access code provided by your instructor
-5. Generate captions (takes ~18 seconds per image)
-6. Download the training ZIP file
-7. Upload to Replicate.com
+3. Select image category (Interior, Person, Object, etc.)
+4. Enter semantic context (e.g., `TU Delft drawing studio`)
+5. Enter the access code provided by your instructor
+6. Generate captions (takes ~5-10 seconds per image)
+7. Download the training ZIP file
+8. Upload to Replicate.com
 
 **See [TUTORIAL.md](TUTORIAL.md) for detailed step-by-step instructions with screenshots.**
 
@@ -58,10 +59,12 @@ Download, extract, and use these to test the tool!
 
 ## Features
 
-- 📁 **Batch Upload**: Upload 20-100 images via drag-and-drop
-- 🤖 **AI Caption Generation**: Automated captions using Google Gemini 2.5 Pro
+- 📁 **Batch Upload**: Upload 20-100 images via drag-and-drop (max 10MB/image, 100MB total)
+- 🎯 **8 Image Categories**: Interior, Person, People/Groups, Object, Vehicle, Exterior, Scene, Abstract
+- 🤖 **AI Caption Generation**: Automated captions using Google Gemini 2.5 Flash
 - ✏️ **Manual Editing**: Review and refine captions with image-by-image editor
 - 📊 **Progress Tracking**: Real-time upload and generation progress
+- 🐢 **Slow Mode**: Optional 3s delay for rate limiting or high server load
 - 📦 **Replicate Export**: One-click export to Replicate-compatible ZIP format
 - 🎨 **Clean UI**: Modern, responsive interface
 
@@ -72,18 +75,23 @@ Download, extract, and use these to test the tool!
 The exported ZIP file is ready for Replicate.com FLUX LoRA training:
 
 ```
-trigger_word_training.zip
+semantic_context_training.zip
 ├── image1.jpg
-├── image1.txt          ← "photo of trigger_word description..."
+├── image1.txt          ← Semantic context + detailed description
 ├── image2.jpg
-├── image2.txt          ← "photo of trigger_word description..."
+├── image2.txt          ← Semantic context + detailed description
 └── ...
 ```
 
-Each image has a matching `.txt` file with its caption in Replicate's required format:
+Each image has a matching `.txt` file with a structured caption:
 ```
-photo of ide_main_hall entrance area, glass doors, high ceiling, natural daylight
+TU Delft drawing studio with high vaulted ceilings and skylights, rows of white
+adjustable drawing tables with wooden stools, dark flooring, translucent partition
+walls, abundant natural light complemented by fluorescent fixtures creating bright
+functional workspace
 ```
+
+**Note**: Replicate automatically adds your trigger word during training. You don't include it in captions.
 
 ---
 
@@ -135,20 +143,15 @@ The app is deployed on Render.com. See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYME
 - ✅ No timeout limits on free tier
 - ✅ Works perfectly with Flask apps
 
-### Scalability & Rate Limiting
+### Scalability & Capacity
 
-The app includes built-in **rate limiting** to prevent server crashes during workshops when multiple students use it simultaneously.
+**Current Configuration** (Workshop Ready):
+- **Render Plan**: Hobby ($7/mo) + Standard Instance ($25/mo)
+- **Capacity**: 30 concurrent students
+- **RAM**: 2GB (30 sessions × ~80MB each)
+- **Auto-cleanup**: Sessions deleted after ZIP export
 
-**Capacity by Plan**:
-- **Free** (512 MB): 6 concurrent users
-- **Starter** ($7/mo, 1 GB): 12 concurrent users ⭐ Recommended for workshops
-- **Standard** ($25/mo, 2 GB): 25 concurrent users
-
-**For 30 students**:
-- **Option 1**: Starter plan + students work in pairs (15 sessions)
-- **Option 2**: Standard plan + all students work individually
-
-See [docs/RATE_LIMITING.md](docs/RATE_LIMITING.md) for details.
+**Slow Mode**: Students can enable 3s delay if server is overloaded or API rate limits are hit.
 
 ---
 
@@ -157,19 +160,19 @@ See [docs/RATE_LIMITING.md](docs/RATE_LIMITING.md) for details.
 ### Architecture
 
 - **Backend**: Flask (Python)
-- **AI Model**: Google Gemini 2.5 Pro vision API
+- **AI Model**: Google Gemini 2.5 Flash vision API
 - **Frontend**: Vanilla JavaScript (no frameworks)
-- **Deployment**: Render.com (stateful, persistent)
-- **Storage**: Session-based with base64 encoding
+- **Deployment**: Render.com (Hobby plan + Standard instance)
+- **Storage**: File-based sessions with base64 encoding
 
 For detailed architecture information, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ### Gemini API
 
-- **Model**: `gemini-2.5-pro` (best quality for image analysis)
-- **Free tier**: 15 requests/minute, 1500/day
-- **Rate limiting**: 2-second delay between requests (built-in)
-- **Cost**: Free tier covers ~750 images/day
+- **Model**: `gemini-2.5-flash` (fast, cost-effective, good quality)
+- **Paid Tier 1**: 1,000 requests/minute
+- **Rate limiting**: 0.1s delay (or 3s in slow mode)
+- **Cost**: ~$2.93 for 30 students × 30 images (vs $11.80 with Pro model)
 
 ### Project Structure
 

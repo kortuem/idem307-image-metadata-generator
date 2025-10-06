@@ -3,6 +3,7 @@
 // State Management
 const state = {
     sessionId: null,
+    category: 'interior',  // Image category (interior, person, object, scene)
     semanticContext: '',  // v2.0: User-provided context (e.g., "TU Delft drawing studio")
     images: [],
     captions: {},
@@ -312,7 +313,8 @@ async function handleFileUpload(event) {
             // Show gallery
             renderImageGrid();
 
-            // Enable semantic context input if disabled
+            // Enable category and semantic context inputs if disabled
+            document.getElementById('category').disabled = false;
             document.getElementById('semantic-context').disabled = false;
 
             // Reset UI sections - hide editor and export until new captions are generated
@@ -401,6 +403,9 @@ async function validateSemanticContext() {
 
 // Generate Captions (one image at a time for real-time progress) - v2.0
 async function generateCaptions() {
+    // Update state with current category selection
+    state.category = document.getElementById('category').value || 'interior';
+
     if (!state.sessionId || !state.semanticContext) {
         log(DEBUG.ERROR, 'Missing session ID or semantic context');
         return;
@@ -440,11 +445,15 @@ async function generateCaptions() {
         updateProgress(processedCount, totalImages);
 
         try {
+            const slowMode = document.getElementById('slow-mode')?.checked || false;
+
             const requestBody = {
                 session_id: state.sessionId,
                 filename: filename,
                 semantic_context: state.semanticContext,
-                api_key: userApiKey
+                category: state.category,
+                api_key: userApiKey,
+                slow_mode: slowMode
             };
 
             const response = await fetch('/api/generate-single', {
@@ -715,7 +724,10 @@ async function exportZip() {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            log(DEBUG.SUCCESS, `Exported ${datasetName}_training.zip`);
+            log(DEBUG.SUCCESS, `Exported ${datasetName}_training.zip - Upload complete! Ready for new dataset.`);
+
+            // Reset UI to start state after successful download
+            resetUIToStart();
         } else {
             const data = await response.json();
             log(DEBUG.ERROR, `Export failed: ${data.error}`);
@@ -723,6 +735,41 @@ async function exportZip() {
     } catch (error) {
         log(DEBUG.ERROR, `Export error: ${error.message}`);
     }
+}
+
+// Reset UI to initial state after successful export
+function resetUIToStart() {
+    // Clear state
+    state.sessionId = null;
+    state.category = 'interior';
+    state.semanticContext = '';
+    state.images = [];
+    state.captions = {};
+    state.currentImageIndex = 0;
+    state.uploadedFiles = [];
+
+    // Reset form inputs
+    document.getElementById('category').value = 'interior';
+    document.getElementById('category').disabled = true;
+    document.getElementById('semantic-context').value = '';
+    document.getElementById('semantic-context').disabled = true;
+
+    // Hide all sections except upload
+    document.getElementById('gallery-section').style.display = 'none';
+    document.getElementById('progress-section').style.display = 'none';
+    document.getElementById('editor-section').style.display = 'none';
+    document.getElementById('export-section').style.display = 'none';
+
+    // Reset upload info
+    document.getElementById('upload-info').style.display = 'none';
+    document.getElementById('upload-count').textContent = '0 images selected';
+
+    // Reset generate button
+    const generateBtn = document.getElementById('generate-btn');
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Generate Captions';
+
+    log(DEBUG.INFO, 'Ready for new dataset upload');
 }
 
 // Modal

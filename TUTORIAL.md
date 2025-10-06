@@ -20,15 +20,16 @@ This tutorial will guide you through preparing your image dataset for FLUX LoRA 
 
 ## What This Tool Does
 
-The Image Metadata Generator automatically creates detailed, AI-generated captions for your images in the exact format required by Replicate.com for FLUX LoRA training.
+The Image Metadata Generator automatically creates detailed, AI-generated captions for your images in the format required by Replicate.com for FLUX LoRA training.
 
 **Example caption:**
 ```
-photo of ide_main_hall entrance area with glass doors, high ceiling,
-natural daylight, open space, modern architecture
+TU Delft drawing studio with high vaulted ceilings and skylights, rows of white
+adjustable drawing tables with wooden stools, dark flooring, translucent partition
+walls, abundant natural light creating bright functional workspace
 ```
 
-Each image gets a unique, descriptive caption that helps the AI learn what makes your subject/space unique.
+Each image gets a unique, descriptive caption. Replicate automatically adds your trigger word during training.
 
 ---
 
@@ -88,30 +89,44 @@ Go to: **https://idem307-image-metadata-generator.onrender.com/**
 
 ---
 
-### Step 4: Enter Your Trigger Word
+### Step 4: Select Image Category
 
-**What is a trigger word?**
-A unique identifier for your dataset that will be used in every caption. When you later generate images on Replicate, you'll use this word in your prompts.
+Choose the category that best matches your images:
 
-**Examples:**
-- For IDE Main Hall: `ide_main_hall`
-- For a lecture room: `lh_room_b`
-- For a person named John: `john_smith`
-- For your design studio: `my_studio_space`
+- **Interior/Architecture** - Rooms, spaces, interior environments
+- **Person/Portrait** - Individual person photos
+- **People/Groups** - Multiple people, group activities
+- **Object/Product** - Items, tools, designed objects
+- **Vehicle/Machine** - Cars, bikes, robots
+- **Exterior/Building** - Building facades, architectural exteriors
+- **Scene/Landscape** - Nature, outdoor scenes
+- **Abstract/Artwork** - Sketches, diagrams, digital art
 
-**Rules:**
-- ✅ Lowercase only
-- ✅ Use underscores instead of spaces
-- ✅ No special characters
-- ✅ Be specific and unique
-
-**Type your trigger word** in the "Trigger Word" field.
-
-You'll see **"✓ Valid trigger word"** when it's correct.
+This ensures the AI uses the right descriptive vocabulary for your images.
 
 ---
 
-### Step 5: Enter Access Code
+### Step 5: Enter Semantic Context
+
+**What is semantic context?**
+A short description that will start every caption. This helps the AI understand what it's looking at.
+
+**Examples:**
+- For IDE Main Hall: `TU Delft main hall`
+- For a lecture room: `Lecture room B`
+- For a person named John: `John Smith`
+- For your design studio: `Modern design studio`
+
+**Rules:**
+- ✅ Max 50 characters
+- ✅ Be specific and descriptive
+- ✅ Will appear at start of every caption
+
+**Type your semantic context** in the "Semantic Context" field.
+
+---
+
+### Step 6: Enter Access Code
 
 In the **"Gemini API Key or Access Code"** field:
 
@@ -127,24 +142,26 @@ In the **"Gemini API Key or Access Code"** field:
 
 ---
 
-### Step 6: Generate Captions
+### Step 7: Generate Captions
 
 1. Click **"Generate Captions"** button
 2. Watch the progress: **"Processing X of Y..."**
-3. Each image takes ~18 seconds to process
-4. Total time: ~10 minutes for 30 images
+3. Each image takes ~5-10 seconds to process
+4. Total time: ~4-8 minutes for 30 images
 
 **What's happening:**
-- AI analyzes each image
-- Generates detailed description
-- Formats as: `photo of [trigger_word] [description]`
+- AI analyzes each image using category-specific prompts
+- Generates detailed description starting with your semantic context
 - Saves caption for export
 
-**☕ Take a break!** Come back in 10 minutes.
+**Optional - Slow Mode:**
+If the server is busy or you see errors, check the **"🐢 Slow Mode"** box. This adds a 3-second delay between requests.
+
+**☕ Take a break!** Come back in 5-10 minutes.
 
 ---
 
-### Step 7: Review Captions (Optional)
+### Step 8: Review Captions (Optional)
 
 After generation completes:
 
@@ -163,16 +180,16 @@ After generation completes:
 
 ---
 
-### Step 8: Export Training ZIP
+### Step 9: Export Training ZIP
 
 1. Click **"Preview Metadata"** to see all captions (optional)
 2. Click **"Export Training Data"**
 3. Download the ZIP file
-4. File name: `[trigger_word]_training.zip`
+4. File name: `[semantic_context]_training.zip`
 
 **What's in the ZIP:**
 ```
-ide_main_hall_training.zip
+tu_delft_drawing_studio_training.zip
 ├── image1.jpg
 ├── image1.txt          ← Caption for image1
 ├── image2.jpg
@@ -180,24 +197,27 @@ ide_main_hall_training.zip
 └── ...
 ```
 
-Each image has a matching `.txt` file with its caption.
+Each image has a matching `.txt` file with its caption. **No README.txt** - just images and captions ready for Replicate.
 
 ---
 
-### Step 9: Upload to Replicate
+### Step 10: Upload to Replicate
 
 1. Go to: https://replicate.com/
 2. Sign in (create account if needed)
 3. Navigate to **FLUX LoRA training**
 4. Upload your ZIP file
-5. Start training!
+5. Enter your **trigger word** (e.g., `ide_main_hall`)
+6. Start training!
 
-**Your trigger word in action:**
+**Important**: Replicate adds your trigger word automatically during training. Your captions don't include it - that's correct!
+
+**Using your trained model:**
 When generating images, use prompts like:
 ```
-photo of ide_main_hall with students working
-photo of ide_main_hall at sunset
-photo of ide_main_hall empty and quiet
+ide_main_hall with students working
+ide_main_hall at sunset
+ide_main_hall empty and quiet
 ```
 
 The AI will generate images in the style of your training data!

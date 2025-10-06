@@ -522,6 +522,8 @@ def generate_single_caption():
         session_id = data.get('session_id')
         filename = data.get('filename')
         semantic_context = data.get('semantic_context', '').strip()
+        category = data.get('category', 'interior').strip().lower()  # Image category
+        slow_mode = data.get('slow_mode', False)  # Slow mode flag from frontend
 
         # Update session activity to keep it alive during long processing
         update_session_activity(session_id)
@@ -581,13 +583,14 @@ def generate_single_caption():
         with open(temp_image_path, 'wb') as f:
             f.write(image_bytes)
 
-        # Initialize caption generator (no trigger_word parameter)
-        generator = GeminiCaptionGenerator(api_key=api_key_to_use)
+        # Initialize caption generator with slow mode setting
+        generator = GeminiCaptionGenerator(api_key=api_key_to_use, slow_mode=slow_mode)
 
-        # Generate caption with semantic context
+        # Generate caption with semantic context and category
         success, caption, error = generator.generate_caption(
             str(temp_image_path),
-            semantic_context
+            semantic_context,
+            category
         )
 
         # Clean up temporary file
