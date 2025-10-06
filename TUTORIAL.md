@@ -1,7 +1,7 @@
 # Image Metadata Generator - Student Tutorial
 
-**Developed by**: Prof. Gerd Kortuem with Claude Code  
-**Institution**: TU Delft, Faculty of Industrial Design Engineering  
+**By Prof. Gerd Kortuem** - TU Delft, Faculty of Industrial Design Engineering
+**Course**: [IDEM307 Generative AI and Design](https://studiegids.tudelft.nl/courses/study-guide/educations/12452)
 **Contact**: g.w.kortuem@tudelft.nl
 
 **🌐 Access the tool**: https://idem307-image-metadata-generator.onrender.com/
