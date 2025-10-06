@@ -60,17 +60,19 @@ Browse the [training datasets with captions](https://github.com/kortuem/idem307-
 
 **Image Requirements:**
 - ✅ **Format**: JPG, JPEG, or PNG
-- ✅ **Quantity**: 20-100 images (30-40 is ideal)
-- ✅ **Subject**: All images should be of the SAME subject/space/person
-- ✅ **Variety**: Different angles, lighting, distances
-- ✅ **Size**: Max 10MB per image
+- ✅ **Quantity**: 20-40 images (Replicate recommends 12-20, but more is better)
+- ✅ **Resolution**: Minimum 512x512, ideally 1024x1024 or larger
+- ✅ **Aspect ratio**: Any aspect ratio works - Replicate auto-resizes
+- ✅ **Size**: Max 10MB per image (100MB total upload)
+- ✅ **Subject**: All images of the SAME subject/space/person
 
 **Tips for good training data:**
+- Use high-resolution images (1024x1024+ recommended)
 - Include close-ups AND wide shots
-- Capture different times of day (if outdoors)
-- Show different angles and perspectives
-- Include the subject doing different things (for people)
-- Ensure good image quality (not blurry)
+- Capture different angles, lighting, and perspectives
+- Show variety in settings and compositions
+- Ensure images are sharp and well-lit (not blurry or dark)
+- Different aspect ratios are fine - no need to crop
 
 ---
 
