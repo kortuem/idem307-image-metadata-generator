@@ -138,6 +138,13 @@ def register_session(session_id):
     active_sessions[session_id] = time.time()
     logger.info(f"Session {session_id} registered. Active sessions: {len(active_sessions)}/{MAX_CONCURRENT_SESSIONS}")
 
+def update_session_activity(session_id):
+    """Update session activity timestamp to keep it alive."""
+    import time
+    if session_id in active_sessions:
+        active_sessions[session_id] = time.time()
+        logger.debug(f"Session {session_id} activity updated")
+
 def is_capacity_available():
     """Check if server has capacity for new session."""
     active_count = get_active_session_count()
@@ -336,6 +343,9 @@ def generate_captions():
         session_id = data.get('session_id')
         semantic_context = data.get('semantic_context', '').strip()
 
+        # Update session activity to keep it alive during long processing
+        update_session_activity(session_id)
+
         # Validate inputs
         session_data = load_session(session_id)
         if not session_data:
@@ -454,6 +464,9 @@ def generate_single_caption():
         session_id = data.get('session_id')
         filename = data.get('filename')
         semantic_context = data.get('semantic_context', '').strip()
+
+        # Update session activity to keep it alive during long processing
+        update_session_activity(session_id)
 
         session_data = load_session(session_id)
         if not session_data:

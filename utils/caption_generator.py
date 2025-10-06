@@ -50,7 +50,7 @@ Critical rules:
         """
         self.api_key = api_key or os.getenv('GEMINI_API_KEY')
         self.last_request_time = 0
-        self.rate_limit_delay = 2.0  # Seconds between requests
+        self.rate_limit_delay = 5.0  # Seconds between requests (15 req/min = 4s minimum)
 
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY not found in environment variables")
