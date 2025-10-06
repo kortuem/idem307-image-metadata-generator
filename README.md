@@ -7,7 +7,7 @@
 **🔧 Deploy Guide**: [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md)
 
 **By Prof. Gerd Kortuem** - TU Delft, Faculty of Industrial Design Engineering
-Built for **IDEM307 Generative AI and Design**
+Built for **[IDEM307 Generative AI and Design](https://studiegids.tudelft.nl/courses/study-guide/educations/12452)**
 
 ---
 
