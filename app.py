@@ -256,6 +256,7 @@ def health_check():
         'api_key_configured': True,
         'access_code_configured': access_code_configured,
         'session_storage': session_manager.get_storage_type(),
+        'session_folder': str(SESSION_FOLDER),  # Show which folder is being used
         'version': '2.0.0',
         'capacity': {
             'active_sessions': active_count,
