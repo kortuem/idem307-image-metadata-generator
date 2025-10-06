@@ -18,11 +18,7 @@ Automated caption generation tool for preparing image datasets for FLUX LoRA fin
 
 This web application automates the time-consuming task of writing captions for image training datasets. It uses Google's Gemini vision AI to generate structured, consistent captions in the format required by Replicate.com for FLUX LoRA fine-tuning.
 
-**Time savings**: Process 30 images in ~10 minutes (vs. 2-3 hours manually)
-
 **Built for**: IDEM307 Generative AI and Design - TU Delft
-**Developed by**: Prof. Gerd Kortuem with Claude Code
-**Contact**: g.w.kortuem@tudelft.nl
 
 ---
 

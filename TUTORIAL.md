@@ -29,21 +29,28 @@ adjustable drawing tables with wooden stools, dark flooring, translucent partiti
 walls, abundant natural light creating bright functional workspace
 ```
 
-Each image gets a unique, descriptive caption. Replicate automatically adds your trigger word during training.
+Each image gets a unique, descriptive caption starting with your semantic context. Replicate handles trigger words automatically during training.
 
 ---
 
 ## Example Datasets (Practice First!)
 
-Before using your own images, try the tool with these example datasets from TU Delft:
+Before using your own images, try the tool with these example datasets from TU Delft campus spaces:
 
-- [IDE Drawing Studio](https://www.dropbox.com/scl/fi/a0a4qglv2xfd16hzdulnp/IDE-Drawing-Studio.zip?rlkey=uaoo41ldb8nnbgul8yn9er7m3&dl=0) (24 images)
-- [IDE Lecture Hall](https://www.dropbox.com/scl/fi/c7r4pq0hct6539s3e8pe4/IDE-Lecture-Hall.zip?rlkey=ht5u3zvn7oo30svm2ps9gglrl&dl=0) (39 images)
-- [IDE Main Hall](https://www.dropbox.com/scl/fi/hq8pvb85977d675yynrjf/IDE-Main-Hall.zip?rlkey=oi2zhq6ot0htq5ftogmllkn9w&dl=0) (39 images)
-- [IDE Studio](https://www.dropbox.com/scl/fi/vgykhjs3o8okbd637vltr/IDE-Studio.zip?rlkey=x0sru5uw2ubi886vs2z2q6lp8&dl=0) (47 images)
-- [SDE Hallway](https://www.dropbox.com/scl/fi/ihxy8f0bi7o3z87yr79ez/SDE-Hallway.zip?rlkey=3gzeys2z38autw3vyax2dutg2&dl=0) (38 images)
+**Original Images** (for practicing caption generation):
+- [IDE Drawing Studio](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/IDE%20Drawing%20Studio) (24 images)
+- [IDE Lecture Hall](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/IDE%20Lecture%20Hall) (39 images)
+- [IDE Main Hall](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/IDE%20Main%20Hall) (39 images)
+- [IDE Studio](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/IDE%20Studio) (47 images)
+- [SDE Hallway](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/SDE%20Hallway) (38 images)
 
-Download one, extract the images, and follow the steps below!
+**Training-Ready Examples** (see what good output looks like):
+Browse the [training datasets with captions](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images) to see examples of properly formatted caption files. These show exactly what your exported ZIP should contain!
+
+**How to use:**
+1. Click on any dataset link above
+2. Click "Download ZIP" (green button) or download individual images
+3. Extract and follow the steps below!
 
 ---
 
@@ -240,17 +247,11 @@ The AI will generate images in the style of your training data!
 - Use access code: `idem307_2025` (for IDEM307 students)
 - Or get your own free API key: https://aistudio.google.com/
 
-### "Trigger word invalid"
-**Solution**:
-- Use lowercase only
-- Use underscores, not spaces
-- Example: `my_space` not `My Space`
-
 ### "Captions not generating"
 **Solution**:
-- Wait ~18 seconds per image (it's slow, but high quality!)
+- Wait ~8-12 seconds per image (using Gemini 2.5 Flash)
 - Check browser console (F12) for errors
-- Verify you entered trigger word first
+- Verify you entered semantic context and API key/access code
 - Try refreshing and starting over
 
 ### "Download doesn't work"
@@ -287,14 +288,13 @@ The AI will generate images in the style of your training data!
 
 **Image**: Photo of an empty architecture studio with drafting tables
 
-**AI-Generated Caption**:
+**AI-Generated Caption** (with semantic context: "TU Delft drawing studio"):
 ```
-photo of ide_drawing_studio A bright and functional art studio workshop
-captured in a wide-angle shot, featuring a prominent arched barrel-vaulted
-ceiling with exposed dark metal trusses and large translucent skylights
-that cast even, diffused daylight across a dark grey linoleum floor, where
-a long row of high-top workbenches and chrome-based stools with wooden
-seats are arranged along a light wood-paneled wall
+TU Delft drawing studio featuring a prominent arched barrel-vaulted ceiling
+with exposed dark metal trusses and large translucent skylights that cast
+even, diffused daylight across a dark grey linoleum floor, where a long row
+of high-top workbenches and chrome-based stools with wooden seats are arranged
+along a light wood-paneled wall, creating a bright and functional workspace
 ```
 
 **Quality**: ✅ Detailed, specific, professional - perfect for training!
