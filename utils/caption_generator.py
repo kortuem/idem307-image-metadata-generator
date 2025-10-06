@@ -59,17 +59,16 @@ Critical rules:
         genai.configure(api_key=self.api_key)
 
         # Model names for google-generativeai 0.8.x (latest API)
-        # Prioritize Gemini 2.5 Pro for superior interior design analysis:
-        # - Style classification (architectural details, design aesthetics)
-        # - Contextual reasoning (spatial relationships, lighting interactions)
-        # - Material and texture identification
-        # - Atmospheric/mood descriptions
+        # Prioritize Gemini 2.5 Flash for cost-effective image analysis:
+        # - 4x cheaper than Pro ($0.30 vs $1.25 per 1M input tokens)
+        # - Fast and accurate for architectural/interior descriptions
+        # - Good quality for LoRA training captions
         model_preference = [
-            'gemini-2.5-pro',            # Best: Deep reasoning, nuanced analysis, style classification
-            'gemini-2.5-flash',          # Good: Fast, accurate, less detailed than Pro
+            'gemini-2.5-flash',          # Primary: Fast, cost-effective, good quality
+            'gemini-2.5-pro',            # Fallback: Superior reasoning if Flash unavailable
             'gemini-2.0-flash-exp',      # Fallback: Experimental 2.0
-            'gemini-1.5-pro',            # Fallback: Stable 1.5 Pro
             'gemini-1.5-flash',          # Fallback: Stable 1.5 Flash
+            'gemini-1.5-pro',            # Fallback: Stable 1.5 Pro
             'gemini-pro-vision'          # Last resort: older vision model
         ]
 
