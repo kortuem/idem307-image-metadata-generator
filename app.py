@@ -142,12 +142,43 @@ def session_exists(session_id):
 
 def cleanup_old_sessions():
     """
-    NO-OP for workshop: Keep all sessions during active use.
-    Sessions persist for entire workshop day, cleaned up manually after.
-    This prevents race conditions and premature deletion during caption generation.
+    Cleanup abandoned sessions (uploaded but never exported).
+    Only deletes sessions older than 2 hours to avoid interfering with active work.
+    Sessions are also deleted immediately after successful export.
     """
-    # Return 0 expired sessions (nothing cleaned up)
-    return 0
+    import time
+
+    if session_manager.storage_type != 'file':
+        return 0  # Redis handles TTL automatically
+
+    current_time = time.time()
+    abandoned_timeout = 2 * 60 * 60  # 2 hours (very generous for workshop)
+    deleted_count = 0
+
+    # Check session files directly (not just active_sessions dict)
+    session_files = list(SESSION_FOLDER.glob('*.json'))
+
+    for session_file in session_files:
+        mtime = session_file.stat().st_mtime
+        age_seconds = current_time - mtime
+
+        # Only delete truly abandoned sessions (2+ hours old)
+        if age_seconds > abandoned_timeout:
+            try:
+                session_id = session_file.stem
+                session_file.unlink()
+
+                # Remove from active_sessions tracker if present
+                if session_id in active_sessions:
+                    del active_sessions[session_id]
+
+                age_hours = age_seconds / 3600
+                logger.info(f"Deleted abandoned session {session_id[:8]}... (age: {age_hours:.1f}h)")
+                deleted_count += 1
+            except Exception as e:
+                logger.error(f"Failed to delete abandoned session {session_file.name}: {e}")
+
+    return deleted_count
 
 def get_active_session_count():
     """Get number of currently active sessions (after cleanup)."""
