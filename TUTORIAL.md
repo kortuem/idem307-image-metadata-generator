@@ -74,6 +74,12 @@ Browse the [training datasets with captions](https://github.com/kortuem/idem307-
 - Ensure images are sharp and well-lit (not blurry or dark)
 - Different aspect ratios are fine - no need to crop
 
+**⚠️ Copyright & Privacy:**
+- ✅ **Use only images you own or have permission to use**
+- ⚠️ **Images with people**: Obtain consent before uploading photos of identifiable individuals
+- ⚠️ **Respect privacy**: Be mindful when uploading images of private spaces or people
+- ℹ️ **Data handling**: Images are processed by Google Gemini AI and deleted after you download your ZIP file
+
 ---
 
 ### Step 2: Open the Tool

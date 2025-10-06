@@ -187,6 +187,18 @@ See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md) for complete deployme
 
 ---
 
+## Privacy & Copyright
+
+**Important Notices:**
+- **Copyright**: Only upload images you own or have permission to use
+- **Consent**: If images contain identifiable people, obtain their consent first
+- **Data Processing**: Images are processed by Google Gemini AI and automatically deleted after ZIP export
+- **No Permanent Storage**: Sessions are temporary and removed from the server after use
+
+**Use responsibly and respect privacy rights.**
+
+---
+
 ## License
 
 MIT License - Free to use for educational and personal projects.
