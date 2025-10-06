@@ -3,6 +3,7 @@
 **By Prof. Gerd Kortuem** - TU Delft, Faculty of Industrial Design Engineering
 **Course**: [IDEM307 Generative AI and Design](https://studiegids.tudelft.nl/courses/study-guide/educations/12452)
 **Contact**: g.w.kortuem@tudelft.nl
+**Last Updated**: October 6, 2025 (v2.0)
 
 **🌐 Access the tool**: https://idem307-image-metadata-generator.onrender.com/
 

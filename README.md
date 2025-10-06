@@ -9,6 +9,8 @@
 **By Prof. Gerd Kortuem** - TU Delft, Faculty of Industrial Design Engineering
 Built for **[IDEM307 Generative AI and Design](https://studiegids.tudelft.nl/courses/study-guide/educations/12452)**
 
+**Last Updated**: October 6, 2025 (v2.0)
+
 ---
 
 ## Overview
