@@ -190,13 +190,4 @@ See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md) for complete deployme
 
 MIT License - Free to use for educational and personal projects.
 
----
-
-## Credits
-
-**Developed by**: Prof. Gerd Kortuem with Claude Code
-**Institution**: TU Delft, Faculty of Industrial Design Engineering
-**Course**: IDEM307 Generative AI and Design
 **Contact**: g.w.kortuem@tudelft.nl
-
-**Powered by**: Google Gemini 2.5 Flash API, Replicate.com FLUX LoRA format
