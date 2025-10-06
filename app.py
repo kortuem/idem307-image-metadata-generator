@@ -192,9 +192,22 @@ def register_session(session_id):
 def update_session_activity(session_id):
     """Update session activity timestamp to keep it alive."""
     import time
+    import os
+
     if session_id in active_sessions:
         active_sessions[session_id] = time.time()
-        logger.debug(f"Session {session_id} activity updated")
+
+        # Update file modification time (touch file) for file-based sessions
+        if session_manager.storage_type == 'file':
+            session_file = SESSION_FOLDER / f"{session_id}.json"
+            if session_file.exists():
+                # Touch file to update mtime
+                os.utime(session_file, None)
+                logger.debug(f"Session {session_id[:8]}... activity updated (file touched)")
+            else:
+                logger.warning(f"Session file not found for {session_id[:8]}...")
+        else:
+            logger.debug(f"Session {session_id[:8]}... activity updated (in-memory)")
 
 def is_capacity_available():
     """Check if server has capacity for new session."""
