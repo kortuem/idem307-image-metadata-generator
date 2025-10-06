@@ -54,10 +54,6 @@ Thumbs.db
 static/uploads/*
 !static/uploads/.gitkeep
 
-# Exclude images and zip files (example datasets hosted on Dropbox)
-images/
-*.zip
-
 # Logs
 *.log
 
@@ -68,7 +64,6 @@ htmlcov/
 
 # Vercel
 .vercel
-images/
 
 # Archive folder (local only)
 archive/
