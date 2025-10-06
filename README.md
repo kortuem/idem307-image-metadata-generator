@@ -45,15 +45,17 @@ This web application automates the time-consuming task of writing captions for i
 
 ## Example Datasets
 
-Practice with these example image datasets from TU Delft campus spaces:
+**Repository datasets**: Example image datasets from TU Delft campus spaces are included in the repository at `__images/data sets/`:
 
-- [IDE Drawing Studio](https://www.dropbox.com/scl/fi/a0a4qglv2xfd16hzdulnp/IDE-Drawing-Studio.zip?rlkey=uaoo41ldb8nnbgul8yn9er7m3&dl=0) (24 images)
-- [IDE Lecture Hall](https://www.dropbox.com/scl/fi/c7r4pq0hct6539s3e8pe4/IDE-Lecture-Hall.zip?rlkey=ht5u3zvn7oo30svm2ps9gglrl&dl=0) (39 images)
-- [IDE Main Hall](https://www.dropbox.com/scl/fi/hq8pvb85977d675yynrjf/IDE-Main-Hall.zip?rlkey=oi2zhq6ot0htq5ftogmllkn9w&dl=0) (39 images)
-- [IDE Studio](https://www.dropbox.com/scl/fi/vgykhjs3o8okbd637vltr/IDE-Studio.zip?rlkey=x0sru5uw2ubi886vs2z2q6lp8&dl=0) (47 images)
-- [SDE Hallway](https://www.dropbox.com/scl/fi/ihxy8f0bi7o3z87yr79ez/SDE-Hallway.zip?rlkey=3gzeys2z38autw3vyax2dutg2&dl=0) (38 images)
+- IDE Drawing Studio (24 images)
+- IDE Lecture Hall (39 images)
+- IDE Main Hall (39 images)
+- IDE Studio (47 images)
+- SDE Hallway (38 images)
 
-Download, extract, and use these to test the tool!
+**Note**: These datasets are tracked in the repository for development/testing purposes. The `__images/` directory may also contain zipped training-ready datasets with generated captions.
+
+**For workshop students**: Download the original datasets from Dropbox (links provided by instructor) or use your own images.
 
 ---
 

@@ -11,6 +11,10 @@
 **Live App**: https://idem307-image-metadata-generator.onrender.com/
 **Purpose**: Flask app for AI-powered image captions for LoRA training (TU Delft workshop)
 
+**Image Datasets**: Located in `__images/` directory
+- `__images/data sets/` - Original datasets (6 locations, ~180 images total)
+- `__images/` - May contain zipped training-ready datasets with captions
+
 ---
 
 ## Commands
