@@ -6,7 +6,8 @@
 **📖 Tutorial**: [TUTORIAL.md](TUTORIAL.md) - Step-by-step student guide
 **🔧 Deploy Guide**: [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md)
 
-Built for **IDEM307 Generative AI and Design** - TU Delft
+**By Prof. Gerd Kortuem** - TU Delft, Faculty of Industrial Design Engineering
+Built for **IDEM307 Generative AI and Design**
 
 ---
 
