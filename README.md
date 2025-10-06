@@ -95,7 +95,7 @@ Example datasets from TU Delft campus spaces are included in `__images/image dat
 - [IDE Studio](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/IDE%20Studio) (47 images)
 - [SDE Hallway](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/SDE%20Hallway) (38 images)
 
-Browse [training-ready examples with captions](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images) to see expected output format.
+Browse [training-ready examples with captions](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/fine-tuning%20data%20sets) to see expected output format.
 
 ---
 
