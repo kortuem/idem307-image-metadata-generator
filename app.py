@@ -759,6 +759,23 @@ def export_zip():
 
         logger.info(f"Session {session_id}: {message}")
 
+        # Delete session after successful export to free up disk space
+        # This is critical for workshop with 30 concurrent students
+        try:
+            # Delete session file
+            if session_manager.storage_type == 'file':
+                session_file = SESSION_FOLDER / f"{session_id}.json"
+                if session_file.exists():
+                    session_file.unlink()
+                    logger.info(f"Deleted session {session_id[:8]}... after export (freed ~80MB)")
+
+            # Remove from active sessions tracker
+            if session_id in active_sessions:
+                del active_sessions[session_id]
+        except Exception as cleanup_error:
+            # Don't fail export if cleanup fails
+            logger.warning(f"Failed to cleanup session {session_id[:8]}...: {cleanup_error}")
+
         # Send zip file
         return send_file(
             zip_buffer,
