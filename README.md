@@ -137,13 +137,18 @@ The app is deployed on Render.com. See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYME
 
 ### Scalability & Capacity
 
-**Current Configuration** (Workshop Ready):
-- **Render Plan**: Hobby ($7/mo) + Standard Instance ($25/mo)
-- **Capacity**: 30 concurrent students
-- **RAM**: 2GB (30 sessions × ~80MB each)
-- **Auto-cleanup**: Sessions deleted after ZIP export
+**Tested Capacity**:
+- **40 concurrent uploads**: 100% success rate
+- **Workshop configuration**: Successfully tested with 30 concurrent students
+- **Memory efficiency**: File-based sessions (~1-15 MB per session)
+- **Auto-cleanup**: Sessions automatically deleted after ZIP export
 
-**Slow Mode**: Students can enable 3s delay if server is overloaded or API rate limits are hit.
+**Bottlenecks**:
+- Worker pool capacity (configured via Gunicorn workers/threads)
+- Gemini API rate limits (1,000 RPM on paid tier)
+- Server RAM (scales with instance size)
+
+See [docs/WORKSHOP_CAPACITY.md](docs/WORKSHOP_CAPACITY.md) for detailed capacity testing results.
 
 ---
 
@@ -154,17 +159,16 @@ The app is deployed on Render.com. See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYME
 - **Backend**: Flask (Python)
 - **AI Model**: Google Gemini 2.5 Flash vision API
 - **Frontend**: Vanilla JavaScript (no frameworks)
-- **Deployment**: Render.com (Hobby plan + Standard instance)
+- **Deployment**: Render.com
 - **Storage**: File-based sessions with base64 encoding
 
 For detailed architecture information, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ### Gemini API
 
-- **Model**: `gemini-2.5-flash` (fast, cost-effective, good quality)
-- **Paid Tier 1**: 1,000 requests/minute
-- **Rate limiting**: 0.1s delay (or 3s in slow mode)
-- **Cost**: ~$2.93 for 30 students × 30 images (vs $11.80 with Pro model)
+- **Model**: `gemini-2.5-flash` (fast and good quality)
+- **Rate limits**: 1,000 requests/minute (paid tier)
+- **Rate limiting**: 0.1s delay between requests (or 3s in slow mode)
 
 ### Project Structure
 
