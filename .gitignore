@@ -69,3 +69,6 @@ htmlcov/
 # Vercel
 .vercel
 images/
+
+# Archive folder (local only)
+archive/
