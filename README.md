@@ -51,7 +51,7 @@ This web application automates the time-consuming task of writing captions for i
 
 **Note**: These datasets are tracked in the repository for development/testing purposes. The `__images/` directory may also contain zipped training-ready datasets with generated captions.
 
-**For workshop students**: Download the original datasets from Dropbox (links provided by instructor) or use your own images.
+**For workshop students**: Download the datasets directly from GitHub (see links in [TUTORIAL.md](TUTORIAL.md)) or use your own images.
 
 ---
 
@@ -134,12 +134,6 @@ http://localhost:5001
 ## Deployment (Render.com)
 
 The app is deployed on Render.com. See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md) for detailed deployment instructions.
-
-**Why Render over Vercel:**
-- ✅ Supports long-running processes (caption generation takes ~18s per image)
-- ✅ Persistent sessions (no "Invalid session ID" errors)
-- ✅ No timeout limits on free tier
-- ✅ Works perfectly with Flask apps
 
 ### Scalability & Capacity
 

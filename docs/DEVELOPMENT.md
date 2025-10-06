@@ -182,9 +182,12 @@ git commit -m "docs: Update API endpoint documentation"
 
 ### Testing with Example Datasets
 
-Use the example datasets from README.md:
-- [IDE Drawing Studio](https://www.dropbox.com/scl/fi/a0a4qglv2xfd16hzdulnp/IDE-Drawing-Studio.zip?rlkey=uaoo41ldb8nnbgul8yn9er7m3&dl=0)
-- [IDE Main Hall](https://www.dropbox.com/scl/fi/hq8pvb85977d675yynrjf/IDE-Main-Hall.zip?rlkey=oi2zhq6ot0htq5ftogmllkn9w&dl=0)
+Use the example datasets from the repository at `__images/image data sets/`:
+- IDE Drawing Studio (24 images)
+- IDE Lecture Hall (39 images)
+- IDE Main Hall (39 images)
+- IDE Studio (47 images)
+- SDE Hallway (38 images)
 
 ### API Testing
 
