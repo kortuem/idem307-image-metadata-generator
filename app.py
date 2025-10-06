@@ -86,7 +86,7 @@ session_manager = SessionManager(redis_url=REDIS_URL, file_folder=SESSION_FOLDER
 #   Pro (4GB): Max 50 sessions safely
 # Set via environment variable MAX_CONCURRENT_SESSIONS
 MAX_CONCURRENT_SESSIONS = int(os.getenv('MAX_CONCURRENT_SESSIONS', 30))
-SESSION_TIMEOUT_MINUTES = 30  # Auto-cleanup old sessions
+SESSION_TIMEOUT_MINUTES = 30  # Not used (cleanup disabled for workshop reliability)
 
 # Active sessions tracker (in-memory, rebuilt from filesystem on startup)
 # Format: {session_id: timestamp}
@@ -95,35 +95,27 @@ active_sessions = {}
 def rebuild_active_sessions():
     """
     Rebuild active_sessions tracker from filesystem on startup.
-    This ensures sessions survive app restarts (within same container).
+    For workshop use: Keep ALL session files, no cleanup during active use.
+    Manual cleanup after workshop via shell command.
     """
     import time
-    import os
 
     if session_manager.storage_type == 'redis':
         logger.info("Using Redis - session tracking handled by Redis TTL")
         return
 
-    # File-based: rebuild from session files
+    # File-based: restore ALL session files (no deletion)
     session_files = list(SESSION_FOLDER.glob('*.json'))
     current_time = time.time()
-    timeout_seconds = SESSION_TIMEOUT_MINUTES * 60
 
     for session_file in session_files:
         session_id = session_file.stem  # filename without .json
         mtime = session_file.stat().st_mtime
 
-        # Check if session is still valid (within timeout)
-        if current_time - mtime < timeout_seconds:
-            active_sessions[session_id] = mtime
-            logger.debug(f"Restored session {session_id[:8]}... (age: {(current_time - mtime)/60:.1f}m)")
-        else:
-            # Delete expired session file
-            try:
-                session_file.unlink()
-                logger.info(f"Deleted expired session file: {session_file.name}")
-            except Exception as e:
-                logger.error(f"Failed to delete expired session {session_file.name}: {e}")
+        # Restore ALL sessions regardless of age
+        active_sessions[session_id] = mtime
+        age_minutes = (current_time - mtime) / 60
+        logger.debug(f"Restored session {session_id[:8]}... (age: {age_minutes:.1f}m)")
 
     logger.info(f"Rebuilt {len(active_sessions)} active sessions from filesystem")
 
@@ -149,34 +141,13 @@ def session_exists(session_id):
     return session_manager.session_exists(session_id)
 
 def cleanup_old_sessions():
-    """Remove sessions older than SESSION_TIMEOUT_MINUTES from active tracker AND filesystem."""
-    import time
-    current_time = time.time()
-    timeout_seconds = SESSION_TIMEOUT_MINUTES * 60
-
-    expired_sessions = [
-        sid for sid, timestamp in active_sessions.items()
-        if current_time - timestamp > timeout_seconds
-    ]
-
-    for sid in expired_sessions:
-        # Remove from in-memory tracker
-        del active_sessions[sid]
-
-        # Delete session file (if file-based storage)
-        if session_manager.storage_type == 'file':
-            session_file = SESSION_FOLDER / f"{sid}.json"
-            try:
-                if session_file.exists():
-                    session_file.unlink()
-                    logger.info(f"Deleted expired session file: {sid[:8]}...")
-            except Exception as e:
-                logger.error(f"Failed to delete session file {sid[:8]}...: {e}")
-        else:
-            # Redis handles expiration automatically via TTL
-            logger.info(f"Removed expired session {sid[:8]}... from active tracker")
-
-    return len(expired_sessions)
+    """
+    NO-OP for workshop: Keep all sessions during active use.
+    Sessions persist for entire workshop day, cleaned up manually after.
+    This prevents race conditions and premature deletion during caption generation.
+    """
+    # Return 0 expired sessions (nothing cleaned up)
+    return 0
 
 def get_active_session_count():
     """Get number of currently active sessions (after cleanup)."""
@@ -190,24 +161,14 @@ def register_session(session_id):
     logger.info(f"Session {session_id} registered. Active sessions: {len(active_sessions)}/{MAX_CONCURRENT_SESSIONS}")
 
 def update_session_activity(session_id):
-    """Update session activity timestamp to keep it alive."""
+    """
+    Update session activity timestamp.
+    For workshop: No file touching needed since we don't cleanup during active use.
+    """
     import time
-    import os
-
     if session_id in active_sessions:
         active_sessions[session_id] = time.time()
-
-        # Update file modification time (touch file) for file-based sessions
-        if session_manager.storage_type == 'file':
-            session_file = SESSION_FOLDER / f"{session_id}.json"
-            if session_file.exists():
-                # Touch file to update mtime
-                os.utime(session_file, None)
-                logger.debug(f"Session {session_id[:8]}... activity updated (file touched)")
-            else:
-                logger.warning(f"Session file not found for {session_id[:8]}...")
-        else:
-            logger.debug(f"Session {session_id[:8]}... activity updated (in-memory)")
+        logger.debug(f"Session {session_id[:8]}... activity updated")
 
 def is_capacity_available():
     """Check if server has capacity for new session."""
