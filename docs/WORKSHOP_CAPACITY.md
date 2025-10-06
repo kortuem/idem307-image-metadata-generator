@@ -173,6 +173,23 @@ If issues occur (unlikely based on testing):
 - Sessions are 1-15 MB each, written to disk
 - Memory usage is minimal (<40% under load)
 
+### Issue 4: "Invalid session ID" Errors ✅ FIXED
+**Date**: October 6, 2025 (production testing)
+**Cause**:
+- Session registered during upload but not found during caption generation
+- `update_session_activity()` silently failed if session not in `active_sessions` dict
+- Could happen if server restarted between upload and caption generation
+
+**Fix** (commits a08cbf2 + 3332de2):
+1. `update_session_activity()` now recovers sessions from disk if missing from memory
+2. `rebuild_active_sessions()` only restores recent sessions (< 2 hours old)
+3. Session recovery is automatic and logged
+
+**Test Results**:
+- 47 images: 100% success (all captions generated)
+- Session properly recovered between upload and caption generation
+- No "Invalid session ID" errors
+
 ---
 
 ## File Organization
