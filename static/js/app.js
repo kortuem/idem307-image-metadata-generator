@@ -220,6 +220,21 @@ async function handleFileUpload(event) {
     files.forEach(file => formData.append('images', file));
 
     try {
+        // Delete old session before creating new one (prevents abandoned sessions)
+        if (state.sessionId) {
+            try {
+                await fetch('/api/delete-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: state.sessionId })
+                });
+                log(DEBUG.INFO, `Deleted previous session ${state.sessionId.substring(0, 8)}...`);
+            } catch (error) {
+                // Don't fail upload if cleanup fails
+                log(DEBUG.WARN, `Failed to delete old session: ${error.message}`);
+            }
+        }
+
         // Create XMLHttpRequest for upload progress tracking
         const xhr = new XMLHttpRequest();
 

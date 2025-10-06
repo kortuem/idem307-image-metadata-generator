@@ -727,6 +727,45 @@ def preview_metadata(session_id):
     })
 
 
+@app.route('/api/delete-session', methods=['POST'])
+def delete_session():
+    """Delete a session (called when student re-uploads or explicitly cleans up)."""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+
+        if not session_id:
+            return jsonify({
+                'success': False,
+                'error': 'session_id required'
+            }), 400
+
+        # Delete session file
+        deleted = False
+        if session_manager.storage_type == 'file':
+            session_file = SESSION_FOLDER / f"{session_id}.json"
+            if session_file.exists():
+                session_file.unlink()
+                deleted = True
+                logger.info(f"Deleted session {session_id[:8]}... on client request")
+
+        # Remove from active sessions tracker
+        if session_id in active_sessions:
+            del active_sessions[session_id]
+
+        return jsonify({
+            'success': True,
+            'deleted': deleted
+        })
+
+    except Exception as e:
+        logger.error(f"Delete session error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/api/export', methods=['POST'])
 def export_zip():
     """Export zip file with images and caption .txt files (v2.0)."""
