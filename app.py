@@ -144,6 +144,7 @@ def cleanup_old_sessions():
     """
     Cleanup abandoned sessions (uploaded but never exported).
     Only deletes sessions older than 2 hours to avoid interfering with active work.
+    Uses active_sessions tracker (updated during caption generation) not file mtime.
     Sessions are also deleted immediately after successful export.
     """
     import time
@@ -155,28 +156,29 @@ def cleanup_old_sessions():
     abandoned_timeout = 2 * 60 * 60  # 2 hours (very generous for workshop)
     deleted_count = 0
 
-    # Check session files directly (not just active_sessions dict)
-    session_files = list(SESSION_FOLDER.glob('*.json'))
+    # Check active_sessions dict for age (updated during caption generation)
+    expired_sessions = [
+        sid for sid, timestamp in active_sessions.items()
+        if current_time - timestamp > abandoned_timeout
+    ]
 
-    for session_file in session_files:
-        mtime = session_file.stat().st_mtime
-        age_seconds = current_time - mtime
+    for session_id in expired_sessions:
+        try:
+            # Calculate age before deletion
+            age_hours = (current_time - active_sessions[session_id]) / 3600
 
-        # Only delete truly abandoned sessions (2+ hours old)
-        if age_seconds > abandoned_timeout:
-            try:
-                session_id = session_file.stem
+            # Delete session file
+            session_file = SESSION_FOLDER / f"{session_id}.json"
+            if session_file.exists():
                 session_file.unlink()
 
-                # Remove from active_sessions tracker if present
-                if session_id in active_sessions:
-                    del active_sessions[session_id]
+            # Remove from active_sessions tracker
+            del active_sessions[session_id]
 
-                age_hours = age_seconds / 3600
-                logger.info(f"Deleted abandoned session {session_id[:8]}... (age: {age_hours:.1f}h)")
-                deleted_count += 1
-            except Exception as e:
-                logger.error(f"Failed to delete abandoned session {session_file.name}: {e}")
+            logger.info(f"Deleted abandoned session {session_id[:8]}... (age: {age_hours:.1f}h)")
+            deleted_count += 1
+        except Exception as e:
+            logger.error(f"Failed to delete abandoned session {session_id[:8]}...: {e}")
 
     return deleted_count
 
