@@ -1,264 +1,188 @@
 # Image Metadata Generator for LoRA Training
 
-**Developed by**: Prof. Gerd Kortuem with Claude Code  
-**Institution**: TU Delft, Faculty of Industrial Design Engineering  
-**Contact**: g.w.kortuem@tudelft.nl
-
----
-
-Automated caption generation tool for preparing image datasets for FLUX LoRA fine-tuning on Replicate.com.
+> Automated caption generation for FLUX LoRA fine-tuning datasets using Google Gemini vision AI
 
 **🌐 Live App**: https://idem307-image-metadata-generator.onrender.com/
+**📖 Tutorial**: [TUTORIAL.md](TUTORIAL.md) - Step-by-step student guide
+**🔧 Deploy Guide**: [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md)
 
-**📖 Student Tutorial**: See [TUTORIAL.md](TUTORIAL.md) for step-by-step instructions
+Built for **IDEM307 Generative AI and Design** - TU Delft
 
 ---
 
 ## Overview
 
-This web application automates the time-consuming task of writing captions for image training datasets. It uses Google's Gemini vision AI to generate structured, consistent captions in the format required by Replicate.com for FLUX LoRA fine-tuning.
+This web application automates the time-consuming task of writing captions for image training datasets. Upload 20-100 images, and it generates structured, detailed captions using Google's Gemini vision AI - formatted for Replicate.com FLUX LoRA training.
 
-**Built for**: IDEM307 Generative AI and Design - TU Delft
+**What it does:**
+1. Upload images via drag-and-drop
+2. Select image category (Interior, Person, Object, etc.)
+3. Enter semantic context (e.g., "TU Delft drawing studio")
+4. AI generates unique captions for each image (~8-12 seconds per image)
+5. Export ZIP file ready for Replicate.com
 
----
-
-## Quick Start (For Students)
-
-### Using the Hosted Version (Easiest)
-
-1. Go to: https://idem307-image-metadata-generator.onrender.com/
-2. Upload 20-40 images from your dataset
-3. Select image category (Interior, Person, Object, etc.)
-4. Enter semantic context (e.g., `TU Delft drawing studio`)
-5. Enter the access code provided by your instructor
-6. Generate captions (takes ~5-10 seconds per image)
-7. Download the training ZIP file
-8. Upload to Replicate.com
-
-**See [TUTORIAL.md](TUTORIAL.md) for detailed step-by-step instructions with screenshots.**
+**Output format:**
+```
+semantic_context_training.zip
+├── image1.jpg
+├── image1.txt    ← "TU Delft drawing studio with vaulted ceilings..."
+├── image2.jpg
+├── image2.txt    ← "TU Delft drawing studio featuring exposed beams..."
+└── ...
+```
 
 ---
 
-## Example Datasets
+## Quick Start
 
-**Repository datasets**: Example image datasets from TU Delft campus spaces are included in the repository at `__images/data sets/`:
+### For Students (Hosted Version)
 
-- IDE Drawing Studio (24 images)
-- IDE Lecture Hall (39 images)
-- IDE Main Hall (39 images)
-- IDE Studio (47 images)
-- SDE Hallway (38 images)
+1. Go to https://idem307-image-metadata-generator.onrender.com/
+2. Upload 20-40 images
+3. Select category and enter semantic context
+4. Enter access code from instructor (or your own Gemini API key)
+5. Generate captions and download ZIP
+6. Upload ZIP to Replicate.com
 
-**Note**: These datasets are tracked in the repository for development/testing purposes. The `__images/` directory may also contain zipped training-ready datasets with generated captions.
+**See [TUTORIAL.md](TUTORIAL.md) for detailed instructions with screenshots.**
 
-**For workshop students**: Download the datasets directly from GitHub (see links in [TUTORIAL.md](TUTORIAL.md)) or use your own images.
+### For Developers (Local Setup)
+
+```bash
+# Clone repository
+git clone https://github.com/kortuem/idem307-image-metadata-generator.git
+cd idem307-image-metadata-generator
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env and add GEMINI_API_KEY
+
+# Run locally
+python app.py
+# Open http://localhost:5001
+```
+
+**See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for developer workflow.**
 
 ---
 
 ## Features
 
-- 📁 **Batch Upload**: Upload 20-100 images via drag-and-drop (max 10MB/image, 100MB total)
-- 🎯 **8 Image Categories**: Interior, Person, People/Groups, Object, Vehicle, Exterior, Scene, Abstract
-- 🤖 **AI Caption Generation**: Automated captions using Google Gemini 2.5 Flash
-- ✏️ **Manual Editing**: Review and refine captions with image-by-image editor
+- 📁 **Batch Upload**: 20-100 images via drag-and-drop (max 10MB/image)
+- 🎯 **8 Image Categories**: Interior, Person, People, Object, Vehicle, Exterior, Scene, Abstract
+- 🤖 **AI Captions**: Google Gemini 2.5 Flash vision API
+- ✏️ **Edit Mode**: Review and refine captions image-by-image
 - 📊 **Progress Tracking**: Real-time upload and generation progress
-- 🐢 **Slow Mode**: Optional 3s delay for rate limiting or high server load
-- 📦 **Replicate Export**: One-click export to Replicate-compatible ZIP format
+- 🐢 **Slow Mode**: Optional 3s delay for rate limiting
+- 📦 **Replicate Export**: One-click ZIP export in Replicate format
 - 🎨 **Clean UI**: Modern, responsive interface
 
 ---
 
-## Output Format
+## Example Datasets
 
-The exported ZIP file is ready for Replicate.com FLUX LoRA training:
+Example datasets from TU Delft campus spaces are included in `__images/image data sets/`:
 
-```
-semantic_context_training.zip
-├── image1.jpg
-├── image1.txt          ← Semantic context + detailed description
-├── image2.jpg
-├── image2.txt          ← Semantic context + detailed description
-└── ...
-```
+- [IDE Drawing Studio](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/IDE%20Drawing%20Studio) (24 images)
+- [IDE Lecture Hall](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/IDE%20Lecture%20Hall) (39 images)
+- [IDE Main Hall](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/IDE%20Main%20Hall) (39 images)
+- [IDE Studio](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/IDE%20Studio) (47 images)
+- [SDE Hallway](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/SDE%20Hallway) (38 images)
 
-Each image has a matching `.txt` file with a structured caption:
-```
-TU Delft drawing studio with high vaulted ceilings and skylights, rows of white
-adjustable drawing tables with wooden stools, dark flooring, translucent partition
-walls, abundant natural light complemented by fluorescent fixtures creating bright
-functional workspace
-```
-
-**Note**: Replicate automatically adds your trigger word during training. You don't include it in captions.
+Browse [training-ready examples with captions](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images) to see expected output format.
 
 ---
 
-## Running Locally (For Development)
+## Technical Stack
 
-### Prerequisites
-
-- Python 3.9+
-- Google Gemini API key ([Get free key](https://aistudio.google.com/))
-
-### Installation
-
-1. **Clone the repository**
-```bash
-git clone https://github.com/kortuem/idem307-image-metadata-generator.git
-cd idem307-image-metadata-generator
-```
-
-2. **Install dependencies**
-```bash
-pip install -r requirements.txt
-```
-
-3. **Configure environment**
-```bash
-cp .env.example .env
-# Edit .env and add your GEMINI_API_KEY
-```
-
-4. **Run the application**
-```bash
-python app.py
-```
-
-5. **Open in browser**
-```
-http://localhost:5001
-```
-
----
-
-## Deployment (Render.com)
-
-The app is deployed on Render.com. See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md) for detailed deployment instructions.
-
-### Scalability & Capacity
-
-**Tested Capacity**:
-- **40 concurrent uploads**: 100% success rate
-- **Workshop configuration**: Successfully tested with 30 concurrent students
-- **Memory efficiency**: File-based sessions (~1-15 MB per session)
-- **Auto-cleanup**: Sessions automatically deleted after ZIP export
-
-**Bottlenecks**:
-- Worker pool capacity (configured via Gunicorn workers/threads)
-- Gemini API rate limits (1,000 RPM on paid tier)
-- Server RAM (scales with instance size)
-
-See [docs/WORKSHOP_CAPACITY.md](docs/WORKSHOP_CAPACITY.md) for detailed capacity testing results.
-
----
-
-## Technical Details
-
-### Architecture
-
-- **Backend**: Flask (Python)
+- **Backend**: Flask (Python 3.9+)
 - **AI Model**: Google Gemini 2.5 Flash vision API
-- **Frontend**: Vanilla JavaScript (no frameworks)
+- **Frontend**: Vanilla JavaScript
 - **Deployment**: Render.com
 - **Storage**: File-based sessions with base64 encoding
 
-For detailed architecture information, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+**Tested capacity**: 40 concurrent uploads (100% success rate), 30 concurrent students
 
-### Gemini API
-
-- **Model**: `gemini-2.5-flash` (fast and good quality)
-- **Rate limits**: 1,000 requests/minute (paid tier)
-- **Rate limiting**: 0.1s delay between requests (or 3s in slow mode)
-
-### Project Structure
-
-```
-image-metadata-generator/
-├── app.py                    # Flask application & API endpoints
-├── requirements.txt          # Python dependencies
-├── .env                      # Environment variables (gitignored)
-├── utils/                    # Backend utilities
-│   ├── caption_generator.py  # Gemini AI integration
-│   ├── image_processor.py    # Image validation & thumbnails
-│   ├── validators.py         # Trigger word validation
-│   └── metadata_exporter.py  # ZIP file creation
-├── templates/
-│   └── index.html           # Main application UI
-├── static/
-│   ├── css/styles.css       # Application styles
-│   └── js/app.js            # Frontend JavaScript
-├── docs/                    # Documentation
-│   ├── ARCHITECTURE.md      # Technical architecture
-│   ├── DEPLOYMENT-RENDER.md # Deployment guide
-│   └── DEVELOPMENT.md       # Developer workflow
-├── TUTORIAL.md              # Student tutorial
-├── README.md                # This file
-└── claude.md                # Claude Code instructions
-```
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed technical architecture.
 
 ---
 
-## Environment Variables
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| **[TUTORIAL.md](TUTORIAL.md)** | Step-by-step student guide |
+| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Technical architecture |
+| **[docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md)** | Deployment guide |
+| **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** | Developer workflow |
+| **[docs/WORKSHOP_CAPACITY.md](docs/WORKSHOP_CAPACITY.md)** | Capacity testing results |
+
+---
+
+## Configuration
+
+### Environment Variables
 
 ```bash
 # Required: Your Gemini API key
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# Optional: Secret access code for sharing
-# Students can use this code instead of their own API key
+# Optional: Secret access code for students
 SECRET_ACCESS_CODE=your_chosen_code
+
+# Optional: Session limit (default: 30)
+MAX_CONCURRENT_SESSIONS=100
 ```
+
+Get a free Gemini API key at https://aistudio.google.com/
+
+### Deployment
+
+The app is deployed on Render.com. Key configuration:
+
+- **Gunicorn**: `--workers 4 --threads 4 --timeout 300`
+- **Capacity**: 40+ concurrent uploads
+- **Memory**: ~1-15 MB per session
+
+See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md) for complete deployment instructions.
 
 ---
 
 ## Troubleshooting
 
-### Common Issues
-
 **"API key or access code required"**
-- Enter your Gemini API key OR the access code provided by instructor
-- Get free API key at: https://aistudio.google.com/
+- Enter your Gemini API key OR the access code from instructor
+- Get free key at https://aistudio.google.com/
 
 **Upload seems to hang**
-- Check browser console (F12) for errors
+- First load may take 30s (server cold start)
 - Hard refresh browser (Cmd+Shift+R / Ctrl+Shift+R)
-- First deployment may take 30s to wake up (cold start)
+- Check browser console (F12) for errors
 
 **Captions not generating**
 - Verify API key is valid
-- Check you entered trigger word first
-- Each image takes ~18 seconds to process
-
-**"Invalid session ID" errors**
-- Should not happen on Render deployment
-- If occurs on Vercel, the platform doesn't support this app
+- Each image takes ~8-12 seconds
+- Check semantic context is entered
 
 ---
 
 ## Version History
 
-**v1.0** (October 2025)
-- ✅ Initial production release
+**v2.0** (October 2025) - Production Release
+- ✅ Semantic context instead of trigger words
+- ✅ 8 image categories with specialized prompts
+- ✅ Gemini 2.5 Flash (faster, cost-effective)
+- ✅ Individual caption generation (real-time progress)
+- ✅ Session recovery from disk
 - ✅ Deployed on Render.com
-- ✅ Full Replicate.com FLUX LoRA format support
-- ✅ Upload progress tracking
-- ✅ Base64 session storage for stateless platforms
-- ✅ Secret access code sharing
 
----
-
-## Credits
-
-**Developed by**: Prof. Gerd Kortuem
-**With**: Claude Code (Anthropic)
-**Institution**: TU Delft, Faculty of Industrial Design Engineering
-**Course**: IDEM307 Generative AI and Design
-**Contact**: g.w.kortuem@tudelft.nl
-
-**Powered by**:
-- Google Gemini 2.5 Pro API
-- Replicate.com FLUX LoRA training format
-- Render.com (hosting)
+**v1.0** (October 2025) - Initial Release
+- ✅ Batch caption generation
+- ✅ Gemini 2.5 Pro vision API
+- ✅ Base64 session storage
 
 ---
 
@@ -268,17 +192,11 @@ MIT License - Free to use for educational and personal projects.
 
 ---
 
-## Documentation
+## Credits
 
-- **[README.md](README.md)** - Project overview (this file)
-- **[TUTORIAL.md](TUTORIAL.md)** - Step-by-step student guide
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Technical architecture
-- **[docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md)** - Deployment guide
-- **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Developer workflow
-- **[docs/RATE_LIMITING.md](docs/RATE_LIMITING.md)** - Scalability & rate limiting
+**Developed by**: Prof. Gerd Kortuem with Claude Code
+**Institution**: TU Delft, Faculty of Industrial Design Engineering
+**Course**: IDEM307 Generative AI and Design
+**Contact**: g.w.kortuem@tudelft.nl
 
----
-
-**🌐 Live App**: https://idem307-image-metadata-generator.onrender.com/
-**📖 Tutorial**: [TUTORIAL.md](TUTORIAL.md)
-**🚀 Deploy Guide**: [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md)
+**Powered by**: Google Gemini 2.5 Flash API, Replicate.com FLUX LoRA format
