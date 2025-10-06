@@ -95,8 +95,8 @@ active_sessions = {}
 def rebuild_active_sessions():
     """
     Rebuild active_sessions tracker from filesystem on startup.
-    For workshop use: Keep ALL session files, no cleanup during active use.
-    Manual cleanup after workshop via shell command.
+    Only restore sessions < 2 hours old (abandoned_timeout).
+    Older sessions will be cleaned up on first cleanup_old_sessions() call.
     """
     import time
 
@@ -104,20 +104,31 @@ def rebuild_active_sessions():
         logger.info("Using Redis - session tracking handled by Redis TTL")
         return
 
-    # File-based: restore ALL session files (no deletion)
+    # File-based: restore recent session files only
     session_files = list(SESSION_FOLDER.glob('*.json'))
     current_time = time.time()
+    abandoned_timeout = 2 * 60 * 60  # 2 hours (must match cleanup_old_sessions)
+    restored_count = 0
+    skipped_count = 0
 
     for session_file in session_files:
         session_id = session_file.stem  # filename without .json
         mtime = session_file.stat().st_mtime
+        age_seconds = current_time - mtime
 
-        # Restore ALL sessions regardless of age
-        active_sessions[session_id] = mtime
-        age_minutes = (current_time - mtime) / 60
-        logger.debug(f"Restored session {session_id[:8]}... (age: {age_minutes:.1f}m)")
+        # Only restore sessions < 2 hours old
+        # Older sessions will be cleaned up immediately anyway
+        if age_seconds < abandoned_timeout:
+            active_sessions[session_id] = mtime
+            age_minutes = age_seconds / 60
+            logger.debug(f"Restored session {session_id[:8]}... (age: {age_minutes:.1f}m)")
+            restored_count += 1
+        else:
+            age_hours = age_seconds / 3600
+            logger.debug(f"Skipped old session {session_id[:8]}... (age: {age_hours:.1f}h)")
+            skipped_count += 1
 
-    logger.info(f"Rebuilt {len(active_sessions)} active sessions from filesystem")
+    logger.info(f"Rebuilt {restored_count} active sessions from filesystem ({skipped_count} old sessions skipped, will be cleaned up)")
 
 # Rebuild active sessions on app startup
 rebuild_active_sessions()
