@@ -9,7 +9,7 @@
 **By Prof. Gerd Kortuem** - TU Delft, Faculty of Industrial Design Engineering
 Built for **[IDEM307 Generative AI and Design](https://studiegids.tudelft.nl/courses/study-guide/educations/12452)**
 
-**Last Updated**: October 6, 2025 (v2.0)
+**Maintenance review**: October 2026. This is a historical teaching tool with targeted safety fixes. Current hosting availability, support and workshop capacity are unverified. The documentation below includes October 2025 workshop records; they are not current deployment guarantees.
 
 ---
 
@@ -95,7 +95,7 @@ Example datasets from TU Delft campus spaces are included in `__images/image dat
 - [IDE Studio](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/IDE%20Studio) (47 images)
 - [SDE Hallway](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/image%20data%20sets/SDE%20Hallway) (38 images)
 
-Browse [training-ready examples with captions](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/fine-tuning%20data%20sets) to see expected output format.
+Browse [historical captioned examples](https://github.com/kortuem/idem307-image-metadata-generator/tree/main/__images/fine-tuning%20data%20sets) to see the historical output format. Dataset reuse permissions remain unverified; see [RIGHTS.md](RIGHTS.md).
 
 ---
 
@@ -107,7 +107,7 @@ Browse [training-ready examples with captions](https://github.com/kortuem/idem30
 - **Deployment**: Render.com
 - **Storage**: File-based sessions with base64 encoding
 
-**Tested capacity**: 40 concurrent uploads (100% success rate), 30 concurrent students
+**Historical workshop claim**: 40 concurrent uploads and 30 students. Not repeated in this maintenance review; in-memory tracking is not a reliable global limit across workers.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed technical architecture.
 
@@ -147,7 +147,7 @@ Get a free Gemini API key at https://aistudio.google.com/
 The app is deployed on Render.com. Key configuration:
 
 - **Gunicorn**: `--workers 4 --threads 4 --timeout 300`
-- **Capacity**: 40+ concurrent uploads
+- **Historical capacity claim**: 40+ concurrent uploads (not reverified)
 - **Memory**: ~1-15 MB per session
 
 See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md) for complete deployment instructions.
@@ -194,8 +194,10 @@ See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md) for complete deployme
 **Important Notices:**
 - **Copyright**: Only upload images you own or have permission to use
 - **Consent**: If images contain identifiable people, obtain their consent first
-- **Data Processing**: Images are processed by Google Gemini AI and automatically deleted after ZIP export
-- **No Permanent Storage**: Sessions are temporary and removed from the server after use
+- **Data processing**: Images, prompts and personal API keys pass through this server; images/prompts are sent to Google. Provider retention and billing are separate from this app.
+- **Storage**: Sessions contain base64 images and captions in files or Redis. Successful export and explicit deletion attempt removal through the configured backend. Redis sessions expire 24 hours after the last save. File cleanup runs during activity and is not a guaranteed scheduled deletion service; failures, backups and abandoned files can retain data.
+- **Session identifiers**: Treat them as bearer secrets. Anyone holding an identifier can access that session. The app does not provide per-user account authorization.
+- **Deployment limitation**: The legacy Gemini SDK uses global credential configuration. Mixed personal/shared keys with concurrent workers/threads need a dedicated isolation review before shared public use.
 
 **Use responsibly and respect privacy rights.**
 
@@ -203,6 +205,17 @@ See [docs/DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md) for complete deployme
 
 ## License
 
-MIT License - Free to use for educational and personal projects.
+Original tool code and technical documentation use the [MIT License](LICENSE), including commercial reuse under its terms. The datasets in `__images/**` are excluded; see [RIGHTS.md](RIGHTS.md).
 
 **Contact**: g.w.kortuem@tudelft.nl
+
+## Offline maintenance checks
+
+```sh
+python -m unittest discover -s tests -p test_session_safety.py -v
+node --test tests/capacity-ui.test.cjs
+```
+
+These tests use temporary directories and mock the caption provider and Redis. They do not validate Google's API or real Redis service availability. Older stress-test scripts may contact a deployed app and incur costs; they are not part of this check.
+
+The development server binds to `127.0.0.1` with debug disabled. `UPLOAD_FOLDER` and `SESSION_FOLDER` can isolate storage for local checks. `GEMINI_MODEL` selects a model (default `gemini-2.5-flash`); model construction does not establish API access. Retired fallback model names have been removed.

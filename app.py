@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 from utils.caption_generator import GeminiCaptionGenerator
 from utils.image_processor import validate_image, create_thumbnail, sanitize_filename
 from utils.metadata_exporter import create_training_zip_in_memory, preview_metadata_content
-from utils.session_manager import SessionManager
+from utils.session_manager import SessionManager, valid_session_id
 
 # Load environment variables
 load_dotenv()
@@ -49,7 +49,7 @@ DEPLOY_TIME = get_deploy_time()
 
 # Configure upload folder
 # Use /tmp for Vercel serverless compatibility (read-only filesystem)
-UPLOAD_FOLDER = Path('/tmp') / 'uploads'
+UPLOAD_FOLDER = Path(os.getenv('UPLOAD_FOLDER', '/tmp/uploads'))
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -68,7 +68,7 @@ REDIS_URL = os.getenv('REDIS_URL')
 
 # Try /data first (Render persistent disk), fallback to /tmp for local dev
 try:
-    SESSION_FOLDER = Path('/data/sessions')
+    SESSION_FOLDER = Path(os.getenv('SESSION_FOLDER', '/data/sessions'))
     SESSION_FOLDER.mkdir(parents=True, exist_ok=True)
 except (PermissionError, OSError):
     SESSION_FOLDER = Path('/tmp/sessions')
@@ -76,6 +76,21 @@ except (PermissionError, OSError):
     logger.info("Using /tmp/sessions (no persistent disk available)")
 
 session_manager = SessionManager(redis_url=REDIS_URL, file_folder=SESSION_FOLDER)
+
+@app.before_request
+def validate_session_identifier():
+    session_id = (request.view_args or {}).get('session_id')
+    requires_session = request.path in {'/api/generate', '/api/generate-single', '/api/caption', '/api/delete-session', '/api/export'}
+    if request.path.startswith('/api/') and request.is_json:
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict):
+            return jsonify(success=False, error='JSON object required'), 400
+        session_id = data.get('session_id', session_id)
+        if 'session_id' in data and not valid_session_id(session_id):
+            return jsonify(success=False, error='Invalid session ID'), 400
+    if (requires_session or session_id is not None) and not valid_session_id(session_id):
+        return jsonify(success=False, error='Invalid session ID'), 400
+
 
 # Rate limiting configuration
 # Max concurrent sessions to prevent out-of-memory crashes
@@ -189,7 +204,7 @@ def cleanup_old_sessions():
             logger.info(f"Deleted abandoned session {session_id[:8]}... (age: {age_hours:.1f}h)")
             deleted_count += 1
         except Exception as e:
-            logger.error(f"Failed to delete abandoned session {session_id[:8]}...: {e}")
+            logger.error("Failed to delete abandoned session; check storage configuration")
 
     return deleted_count
 
@@ -202,7 +217,7 @@ def register_session(session_id):
     """Register a new active session."""
     import time
     active_sessions[session_id] = time.time()
-    logger.info(f"Session {session_id} registered. Active sessions: {len(active_sessions)}/{MAX_CONCURRENT_SESSIONS}")
+    logger.info(f"Session {session_id[:8]}... registered. Active sessions: {len(active_sessions)}/{MAX_CONCURRENT_SESSIONS}")
 
 def update_session_activity(session_id):
     """
@@ -394,7 +409,7 @@ def upload_images():
         }
         save_session(session_id, session_data)
 
-        logger.info(f"Session {session_id}: Uploaded {len(valid_images)} images, rejected {len(rejected)}")
+        logger.info(f"Session {session_id[:8]}...: Uploaded {len(valid_images)} images, rejected {len(rejected)}")
 
         return jsonify({
             'success': True,
@@ -406,10 +421,10 @@ def upload_images():
         })
 
     except Exception as e:
-        logger.error(f"Upload error: {e}")
+        logger.error("Upload error; check server configuration")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': 'Request failed; check the input and server configuration'
         }), 500
 
 
@@ -516,7 +531,7 @@ def generate_captions():
                 })
                 logger.error(f"✗ Failed to generate caption for {filename}: {error}")
 
-        logger.info(f"Session {session_id}: Generated {len(captions_result)} captions, {len(failed_images)} failed")
+        logger.info(f"Session {session_id[:8]}...: Generated {len(captions_result)} captions, {len(failed_images)} failed")
 
         return jsonify({
             'success': True,
@@ -527,10 +542,10 @@ def generate_captions():
         })
 
     except Exception as e:
-        logger.error(f"Caption generation error: {e}")
+        logger.error("Caption generation error; check server configuration")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': 'Request failed; check the input and server configuration'
         }), 500
 
 
@@ -594,7 +609,7 @@ def generate_single_caption():
             logger.info("Using shared API key (access code matched)")
         else:
             api_key_to_use = user_input  # User-provided API key
-            logger.info(f"Using user-provided API key (access code did not match, expected: {SECRET_ACCESS_CODE[:4] if SECRET_ACCESS_CODE else 'NOT_SET'}...)")
+            logger.info("Using user-provided API key")
 
         # Decode base64 image and save temporarily
         image_bytes = base64.b64decode(img_data['data'])
@@ -639,10 +654,10 @@ def generate_single_caption():
             }), 500
 
     except Exception as e:
-        logger.error(f"Error generating caption: {e}")
+        logger.error("Error generating caption; check server configuration")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': 'Request failed; check the input and server configuration'
         }), 500
 
 
@@ -677,7 +692,7 @@ def update_caption():
         session_data['images'][filename]['edited'] = True
         save_session(session_id, session_data)
 
-        logger.info(f"Session {session_id}: Caption updated for {filename}")
+        logger.info(f"Session {session_id[:8]}...: Caption updated for {filename}")
 
         return jsonify({
             'success': True,
@@ -687,10 +702,10 @@ def update_caption():
         })
 
     except Exception as e:
-        logger.error(f"Caption update error: {e}")
+        logger.error("Caption update error; check server configuration")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': 'Request failed; check the input and server configuration'
         }), 500
 
 
@@ -765,14 +780,9 @@ def delete_session():
                 'error': 'session_id required'
             }), 400
 
-        # Delete session file
-        deleted = False
-        if session_manager.storage_type == 'file':
-            session_file = SESSION_FOLDER / f"{session_id}.json"
-            if session_file.exists():
-                session_file.unlink()
-                deleted = True
-                logger.info(f"Deleted session {session_id[:8]}... on client request")
+        deleted = session_manager.session_exists(session_id)
+        if not session_manager.delete_session(session_id):
+            return jsonify(success=False, error='Session cleanup failed; retry deletion'), 500
 
         # Remove from active sessions tracker
         if session_id in active_sessions:
@@ -784,10 +794,10 @@ def delete_session():
         })
 
     except Exception as e:
-        logger.error(f"Delete session error: {e}")
+        logger.error("Delete session error; check server configuration")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': 'Request failed; check the input and server configuration'
         }), 500
 
 
@@ -852,24 +862,13 @@ def export_zip():
                 'error': message
             }), 400
 
-        logger.info(f"Session {session_id}: {message}")
+        logger.info(f"Session {session_id[:8]}...: {message}")
 
-        # Delete session after successful export to free up disk space
-        # This is critical for workshop with 30 concurrent students
-        try:
-            # Delete session file
-            if session_manager.storage_type == 'file':
-                session_file = SESSION_FOLDER / f"{session_id}.json"
-                if session_file.exists():
-                    session_file.unlink()
-                    logger.info(f"Deleted session {session_id[:8]}... after export (freed ~80MB)")
-
-            # Remove from active sessions tracker
-            if session_id in active_sessions:
-                del active_sessions[session_id]
-        except Exception as cleanup_error:
-            # Don't fail export if cleanup fails
-            logger.warning(f"Failed to cleanup session {session_id[:8]}...: {cleanup_error}")
+        # Delete through the active backend, including Redis.
+        if session_manager.delete_session(session_id):
+            active_sessions.pop(session_id, None)
+        else:
+            logger.warning('Export succeeded but session cleanup failed; retry deletion')
 
         # Send zip file
         return send_file(
@@ -880,10 +879,10 @@ def export_zip():
         )
 
     except Exception as e:
-        logger.error(f"Export error: {e}")
+        logger.error("Export error; check server configuration")
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': 'Request failed; check the input and server configuration'
         }), 500
 
 
@@ -895,4 +894,4 @@ if __name__ == '__main__':
 
     # Run development server
     port = int(os.getenv('PORT', 5001))
-    app.run(debug=True, host='0.0.0.0', port=port)
+    app.run(debug=False, host='127.0.0.1', port=port)

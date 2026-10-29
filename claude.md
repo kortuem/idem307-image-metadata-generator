@@ -1,3 +1,5 @@
+> Historical October 2025 workshop guidance. Current maintenance status, privacy limits and checks are in [README.md](README.md). Do not treat old deployment, model pricing or capacity statements below as verified current facts.
+
 # Claude Project Instructions
 
 > **Note**: This file contains AI assistant instructions for Claude Code.

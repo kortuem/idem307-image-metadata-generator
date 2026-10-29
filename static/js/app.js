@@ -173,22 +173,25 @@ async function checkAPIHealth() {
 }
 
 function showCapacityError(data) {
-    const message = `
-        <div class="capacity-error">
-            <h3>⚠️ Server Busy</h3>
-            <p>${data.message}</p>
-            <p><strong>Active users:</strong> ${data.active_sessions}/${data.max_sessions}</p>
-            <p><strong>Suggestion:</strong> Please wait 2-3 minutes and try again.</p>
-            <button onclick="location.reload()" class="btn btn-primary" style="margin-top: 1rem;">
-                Retry Now
-            </button>
-        </div>
-    `;
-
-    // Show in alert or modal
     const alertDiv = document.createElement('div');
     alertDiv.className = 'alert alert-warning';
-    alertDiv.innerHTML = message;
+    const content = document.createElement('div');
+    content.className = 'capacity-error';
+    const heading = document.createElement('h3');
+    heading.textContent = '⚠️ Server Busy';
+    const message = document.createElement('p');
+    message.textContent = data.message;
+    const count = document.createElement('p');
+    count.textContent = `Active users: ${data.active_sessions}/${data.max_sessions}`;
+    const suggestion = document.createElement('p');
+    suggestion.textContent = 'Please wait 2-3 minutes and try again.';
+    const retry = document.createElement('button');
+    retry.className = 'btn btn-primary';
+    retry.style.marginTop = '1rem';
+    retry.textContent = 'Retry Now';
+    retry.addEventListener('click', () => location.reload());
+    content.append(heading, message, count, suggestion, retry);
+    alertDiv.append(content);
     alertDiv.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; max-width: 500px; padding: 2rem; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);';
 
     document.body.appendChild(alertDiv);

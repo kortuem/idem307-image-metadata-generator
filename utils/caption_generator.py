@@ -234,30 +234,9 @@ Critical rules:
         if slow_mode:
             logger.info("🐢 Slow mode enabled: 3s delay between API calls")
 
-        # Model names for google-generativeai 0.8.x (latest API)
-        # Prioritize Gemini 2.5 Flash for cost-effective image analysis:
-        # - 4x cheaper than Pro ($0.30 vs $1.25 per 1M input tokens)
-        # - Fast and accurate for architectural/interior descriptions
-        # - Good quality for LoRA training captions
-        model_preference = [
-            'gemini-2.5-flash',          # Primary: Fast, cost-effective, good quality
-            'gemini-2.5-pro',            # Fallback: Superior reasoning if Flash unavailable
-            'gemini-2.0-flash-exp',      # Fallback: Experimental 2.0
-            'gemini-1.5-flash',          # Fallback: Stable 1.5 Flash
-            'gemini-1.5-pro',            # Fallback: Stable 1.5 Pro
-            'gemini-pro-vision'          # Last resort: older vision model
-        ]
-
-        for model_name in model_preference:
-            try:
-                self.model = genai.GenerativeModel(model_name)
-                logger.info(f"Using Gemini model: {model_name}")
-                break
-            except Exception as e:
-                logger.warning(f"Failed to load {model_name}: {e}")
-                if model_name == model_preference[-1]:
-                    # Last fallback failed, raise error
-                    raise ValueError(f"Could not initialize any Gemini model. Last error: {e}")
+        # Model construction does not contact Google, so it cannot validate a
+        # fallback model. Keep the model explicit and configurable instead.
+        self.model = genai.GenerativeModel(os.getenv('GEMINI_MODEL', 'gemini-2.5-flash'))
 
     def _rate_limit(self):
         """Enforce rate limiting between API requests."""
@@ -289,16 +268,16 @@ Critical rules:
                 # Categorize error for better monitoring
                 if 'quota' in error_msg.lower() or 'rate' in error_msg.lower() or '429' in error_msg:
                     error_category = "RATE_LIMIT"
-                    logger.error(f"⚠️ RATE LIMIT ERROR (attempt {attempt + 1}/{max_retries}): {error_msg}")
+                    logger.error(f"⚠️ RATE LIMIT ERROR (attempt {attempt + 1}/{max_retries}): {error_category}")
                 elif '503' in error_msg or 'unavailable' in error_msg.lower():
                     error_category = "SERVICE_UNAVAILABLE"
-                    logger.error(f"⚠️ SERVICE UNAVAILABLE (attempt {attempt + 1}/{max_retries}): {error_msg}")
+                    logger.error(f"⚠️ SERVICE UNAVAILABLE (attempt {attempt + 1}/{max_retries}): {error_category}")
                 elif '500' in error_msg or 'internal' in error_msg.lower():
                     error_category = "SERVER_ERROR"
-                    logger.error(f"⚠️ SERVER ERROR (attempt {attempt + 1}/{max_retries}): {error_msg}")
+                    logger.error(f"⚠️ SERVER ERROR (attempt {attempt + 1}/{max_retries}): {error_category}")
                 else:
                     error_category = "OTHER"
-                    logger.error(f"⚠️ API ERROR ({error_type}, attempt {attempt + 1}/{max_retries}): {error_msg}")
+                    logger.error(f"⚠️ API ERROR ({error_type}, attempt {attempt + 1}/{max_retries}): {error_category}")
 
                 if attempt == max_retries - 1:
                     logger.error(f"💥 FAILED after {max_retries} attempts - Error: {error_category}")
@@ -465,8 +444,8 @@ Generate a NEW caption starting with "{semantic_context}", maximum 50 words. Out
                         return (False, cleaned_regen, f"Regeneration failed: {', '.join(issues_regen)}")
 
                 except Exception as e:
-                    logger.error(f"Regeneration error: {e}")
-                    return (False, cleaned_caption, f"Validation failed and regeneration error: {str(e)}")
+                    logger.error(f"Regeneration error: Request failed")
+                    return (False, cleaned_caption, f"Validation failed and regeneration error: Request failed")
 
             logger.info(f"Generated caption for {os.path.basename(image_path)}: {cleaned_caption[:60]}...")
             if issues:
@@ -480,7 +459,7 @@ Generate a NEW caption starting with "{semantic_context}", maximum 50 words. Out
             return (False, "", error)
 
         except Exception as e:
-            error = f"Failed to generate caption: {str(e)}"
+            error = f"Failed to generate caption: Request failed"
             logger.error(error)
             return (False, "", error)
 
